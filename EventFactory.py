@@ -14,29 +14,26 @@ def create_event_object(row):
     metadata = {
         'id': row['id'],
         'timestamp': row['timestamp'],
-        'username': row['username'],
         'userid': row['user_id'],
-        'page': row['page'],
-        'action': row['action']
     }
-    
+
     if event_type == 'Login':
         return Login(metadata)
     elif event_type == 'Logout':
         return Logout(metadata)
     elif event_type == 'Reading slides':
         if row['action'] == 'mouseenter':
-            return MouseEnterSlides(metadata)
+            return MouseEnterSlides(metadata, row["slide_id"])
         elif row['action'] == 'mouseleave':
-            return MouseLeaveSlides(metadata)
+            return MouseLeaveSlides(metadata, row["slide_id"])
         else:
             return PageEntry(metadata)
     elif event_type == 'Page Entry':
         # check if this is a video pause/play event
         if row['action'] == 'pause':
-            return PauseVideo(metadata)
+            return PauseVideo(metadata, row['video_id'])
         elif row['action'] == 'play':
-            return PlayVideo(metadata)
+            return PlayVideo(metadata, row['video_id'])
         # todo : more elifs for page entry objects for each type of page?
         else:
             return PageEntry(metadata)

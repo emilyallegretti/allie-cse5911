@@ -6,6 +6,6 @@ from abc import ABC
 # Event acts as an abstract class that shouldn't be instantiated directly
 class Event(ABC):
     def __init__(self, metadata):
-        self.id = id
+        self.id=metadata['id']
         self.timestamp = metadata["timestamp"]
         self.userid = metadata["userid"]

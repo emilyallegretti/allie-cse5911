@@ -16,7 +16,9 @@ def main():
             event = create_event_object(row)
             events.append(event)
 
-        print(events)
+        for event in events:
+            if event:
+                print(event.__dict__)
     finally:
         db.close()
 
