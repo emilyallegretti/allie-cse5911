@@ -8,7 +8,4 @@ class Event(ABC):
     def __init__(self, metadata):
         self.id = id
         self.timestamp = metadata["timestamp"]
-        self.username = metadata["username"]
         self.userid = metadata["userid"]
-        self.page = metadata["page"]
-        self.action = metadata['action']

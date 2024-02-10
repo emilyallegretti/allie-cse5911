@@ -19,6 +19,5 @@ def create_event_object(row):
         return Login(metadata)
     elif event_type == 'Logout':
         return Logout(metadata)
-    ## TODO: Add other kinds
     else:
         print("No events so far")
