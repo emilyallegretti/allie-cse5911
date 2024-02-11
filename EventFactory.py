@@ -8,6 +8,8 @@ from Events.MouseLeaveSlides import MouseLeaveSlides
 from Events.PageEntry import PageEntry
 from Events.PauseVideo import PauseVideo
 from Events.PlayVideo import PlayVideo
+from Events.EmojiSelect import EmojiSelect
+
 
 def create_event_object(row):
     event_type = row['kind']
@@ -37,5 +39,5 @@ def create_event_object(row):
         # todo : more elifs for page entry objects for each type of page?
         else:
             return PageEntry(metadata)
-    else:
-        print("No events so far")
+    elif event_type == 'emoji_select':
+        return EmojiSelect(metadata, row['emoji_type'])

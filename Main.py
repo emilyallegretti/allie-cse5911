@@ -3,7 +3,7 @@ from EventFactory import create_event_object
 
 def main():
     db = Database(
-        r"C:\Users\14403\allie-cse5911\FromEchoDev240208a_echo_main_db_current.sqlite3"
+        r"FromEchoDev240208a_echo_main_db_current.sqlite3"
     )
     db.connect()
 
@@ -14,11 +14,24 @@ def main():
         events = []
         for row in results:
             event = create_event_object(row)
-            events.append(event)
-
-        for event in events:
-            if event:
+            if event: 
+                events.append(event.__init__)
                 print(event.__dict__)
+            else:
+                print("Invalid event")
+    
+        # Create a dataframe
+        df = db.create_dataframe(query_string)
+        print(df.head())
+
+        # Example of time sequence of a user's login events
+        user_logins = df[(df['user_id'] == 75) & (df['kind'] == 'Login')].sort_values('timestamp')
+        print("Emily's Login Events:")
+        print(user_logins[['user_id', 'action', 'timestamp']])
+
+        user_logins = df[(df['user_id'] == 76) & (df['kind'] == 'Login')].sort_values('timestamp')
+        print("Crystal's Login Events:")
+        print(user_logins[['user_id', 'action', 'timestamp']])
     finally:
         db.close()
 
