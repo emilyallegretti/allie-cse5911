@@ -2,4 +2,4 @@ from Events.Event import Event
 # represents a Logout event.
 class Logout(Event):
     def __init__(self, metadata):
-        super().__init__(metadata)
+        super().__init__(metadata, self.__class__.__name__)

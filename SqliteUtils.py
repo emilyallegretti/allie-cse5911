@@ -4,7 +4,6 @@ Set up database connection and run queries
 import os
 import sqlite3 as sq
 import pandas as pd
-
 class Database:
     def __init__(self, db_file):
         self.db_file = db_file

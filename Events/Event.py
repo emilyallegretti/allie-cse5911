@@ -5,7 +5,13 @@ from abc import ABC
 # metadata = {id , timestamp, username, userid, page, action}
 # Event acts as an abstract class that shouldn't be instantiated directly
 class Event(ABC):
-    def __init__(self, metadata):
-        self.id=metadata['id']
+    # keep a static list of all Event objects created, stored as a list of dictionaries
+    events=[]
+    def __init__(self, metadata,kind):
+        self.user_id=metadata['user_id']
+        self.kind=kind
         self.timestamp = metadata["timestamp"]
-        self.userid = metadata["userid"]
+
+    @staticmethod
+    def add(event):
+        Event.events.append(event.__dict__)

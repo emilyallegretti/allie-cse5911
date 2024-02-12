@@ -1,5 +1,6 @@
 # each instance of this class represents a Comment on a specific Microblog.
 class Comment:
+    comments=[]
     def __init__(self, commentId, comment, createdDate, updatedDate, authorId, microblogId):
         self.commentId=commentId
         self.comment=comment
@@ -7,3 +8,8 @@ class Comment:
         self.updatedDate=updatedDate
         self.authorId=authorId
         self.microblogId=microblogId
+    
+    @staticmethod
+    # adds a Comment to comments list.
+    def add(comment):
+        Comment.comments.append(comment.__dict__)
