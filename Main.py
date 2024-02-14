@@ -68,9 +68,12 @@ def main():
         # show an example of a user's video watching sequence by plotting pauses/plays vs time
         userId = 74
         videoId = 'video2'
-        videoDf = VideoWatchSequence(userId, videoId)
+        videoDf = VideoWatchSequence(userId, videoId).videoEventsDf
+        # get only time out of timestamp
+        videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:])
         # plot action vs time
-        plt.scatter(videoDf.videoEventsDf['timestamp'],videoDf.videoEventsDf['kind']) 
+        videoDf["time_only"] = videoDf["timestamp"]
+        plt.scatter(videoDf["time_only"], videoDf["kind"])
         plt.xlabel('Time')
         plt.ylabel('Action')
         plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
