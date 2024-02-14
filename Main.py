@@ -6,6 +6,7 @@ from Posts.Comment import Comment
 from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
+import matplotlib.pyplot as plt
 
 def main():
     db = Database(
@@ -64,7 +65,17 @@ def main():
         print("Crystal's Login Events:")
         print(user_logins[['user_id', 'kind', 'timestamp']])
 
-        print(VideoWatchSequence(74, 'video2').videoEventsDf)
+        # show an example of a user's video watching sequence by plotting pauses/plays vs time
+        userId = 74
+        videoId = 'video2'
+        videoDf = VideoWatchSequence(userId, videoId)
+        # plot action vs time
+        plt.scatter(videoDf.videoEventsDf['timestamp'],videoDf.videoEventsDf['kind']) 
+        plt.xlabel('Time')
+        plt.ylabel('Action')
+        plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
+        plt.show()
+
     finally:
         db.close()
 

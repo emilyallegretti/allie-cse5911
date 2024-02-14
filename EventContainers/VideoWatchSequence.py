@@ -1,8 +1,5 @@
 import pandas as pd
 from Events.Event import Event
-
-from Events.PauseVideo import PauseVideo
-from Events.PlayVideo import PlayVideo
 # this EventContainer takes a userId and a videoId as parameters in its constructor and creates a 
 # Pandas dataframe representing the user's pause and play events for that specific videoId, sorted by timestamp.
 class VideoWatchSequence:
