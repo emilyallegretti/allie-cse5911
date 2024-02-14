@@ -1,4 +1,5 @@
 import pandas as pd
+from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
@@ -57,11 +58,13 @@ def main():
         print((df['user_id']==75)[75])
         user_logins = df[(df['user_id'] == 75) & (df['kind']=='Login')]
         print("Emily's Login Events:")
-        print(user_logins[['user_id', 'kind', 'timestamp']])
+        print(user_logins[["user_id", "kind", "timestamp"]])
 
         user_logins = df[(df['user_id'] == 76) & (df['kind'] == 'Login')].sort_values('timestamp')
         print("Crystal's Login Events:")
         print(user_logins[['user_id', 'kind', 'timestamp']])
+
+        print(VideoWatchSequence(74, 'video2').videoEventsDf)
     finally:
         db.close()
 
