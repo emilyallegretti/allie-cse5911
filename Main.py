@@ -53,7 +53,7 @@ def main():
                 Microblog.add(microblog)
         print(Microblog.microblogs)
 
-        user_activity_query = "SELECT * FROM EchoApp_useractivity"
+        user_activity_query = "SELECT * FROM EchoApp_videoactivity"
         results = db.run_query(user_activity_query)
         user_activities = []
         for row in results:
@@ -80,6 +80,7 @@ def main():
 
         df_activities['timestamp'] = pd.to_datetime(df_activities['timestamp'])
         df_activities['date'] = df_activities['timestamp'].dt.date
+        df_activities['time'] = df_activities['timestamp'].dt.timet
 
         user_id = 62  
         user_activities_df = df_activities[df_activities['user_id'] == user_id]
@@ -92,7 +93,7 @@ def main():
         # representation for each day
         for date, group in grouped_activities:
             print(f"Activities for {date}:")
-            print(tabulate(group[['user_id', 'timestamp', 'activityType' ]], headers='keys', tablefmt='pretty'))
+            print(tabulate(group[['user_id', 'time', 'activityType' ]], headers='keys', tablefmt='pretty'))
             print("\n")  
         
         user_activities_df = user_activities_df.sort_values('timestamp')

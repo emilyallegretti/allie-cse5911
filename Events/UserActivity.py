@@ -9,8 +9,7 @@ class UserActivity(Event):
 def create_user_activity(row):
     metadata = {
         'user_id': row['user_id'],
-        'timestamp': row['date'],
-        'user_name': row['value2']
+        'timestamp': row['timestamp'],
     }
-    return UserActivity(metadata, row['value1'], row)
+    return UserActivity(metadata, row['page'], row)
 
