@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 from EventContainers.EmojiSelectSequence import EmojiSelectSequence
 from Events.Event import Event
 from Posts.Announcement import Announcement
@@ -10,9 +11,7 @@ from EventFactory import create_announcement, create_comment, create_event_objec
 from Events.EmojiSelect import EmojiSelect
 
 def main():
-    db = Database(
-        r"db\FromEchoDev240208a_echo_main_db_current.sqlite3"
-    )
+    db = Database(os.path.join("db", "FromEchoDev240208a_echo_main_db_current.sqlite3"))
     db.connect()
 
     try:        
