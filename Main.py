@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from EventContainers.EmojiSelectSequence import EmojiSelectSequence
 from Events.Event import Event
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
@@ -56,39 +57,32 @@ def main():
         print(df)
 
         # Example of time sequence of a user's login events
+        print("************ Examples of Login Events ************")
         user_logins = df[(df['user_id'] == 75) & (df['kind']=='Login')]
-        print("***********************************")
         print("Emily's Login Events:")
         print(user_logins[['user_id', 'kind', 'timestamp']])
 
         user_logins = df[(df['user_id'] == 76) & (df['kind'] == 'Login')].sort_values('timestamp')
         print("Crystal's Login Events:")
         print(user_logins[['user_id', 'kind', 'timestamp']])
+        print("**************************************************")
 
-        # Example of a user's emoji changes
-        user_id = 75
-        emoji_events = df[(df['user_id'] == user_id) & (df['kind'] == 'EmojiSelect')]
-        print(emoji_events[['user_id', 'timestamp', 'emojiType']])  # used to check the result
-
+        # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
+        userId = 75
+        emojiDf = EmojiSelectSequence(userId).emojiEventsDf
         # convert to datetime format
-        emoji_events.loc[:, 'timestamp'] = pd.to_datetime(emoji_events['timestamp'])
-
-        # scores are added into lists of intensity_scores and emotion_scores respectively
-        intensity_scores, emotion_scores = zip(*emoji_events['emojiType'].apply(EmojiSelect.get_emoji_mapping))
-
-        # add two new columns to emoji_events dataframe
-        emoji_events.loc[:, 'IntensityScore'] = intensity_scores
-        emoji_events.loc[:, 'EmotionScore'] = emotion_scores
-
-        # show plot
+        emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp'])
+        # plot score vs time
+        print("\n******** Examples of Emoji Select Events *********")
         plt.figure(figsize=(8, 5))
-        plt.plot(emoji_events['timestamp'], emoji_events['IntensityScore'], label='Intensity', marker='o', linestyle='solid')
-        plt.plot(emoji_events['timestamp'], emoji_events['EmotionScore'], label='Emotion', marker='x', linestyle='dashed')
+        plt.plot(emojiDf['timestamp'], emojiDf['IntensityScore'], label='Intensity', marker='o', linestyle='solid')
+        plt.plot(emojiDf['timestamp'], emojiDf['EmotionScore'], label='Emotion', marker='x', linestyle='dashed')
         plt.xlabel('Time')
         plt.ylabel('Score')
         plt.legend()
-        plt.title('Emoji Changes Over Time for User ' + str(user_id))
+        plt.title('Emoji Changes Over Time for User ' + str(userId))
         plt.show()
+
     finally:
         db.close()
 
