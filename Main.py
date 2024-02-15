@@ -11,7 +11,7 @@ from Events.EmojiSelect import EmojiSelect
 
 def main():
     db = Database(
-        r"FromEchoDev240208a_echo_main_db_current.sqlite3"
+        r"db\FromEchoDev240208a_echo_main_db_current.sqlite3"
     )
     db.connect()
 
@@ -36,7 +36,7 @@ def main():
             if ann:
                 Announcement.add(ann)
         print(Announcement.announcements)
-        
+
         comm_query="SELECT * from EchoApp_comment"
         results = db.run_query(comm_query)
         for row in results:
