@@ -1,14 +1,16 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+
 from EventContainers.EmojiSelectSequence import EmojiSelectSequence
+from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
 from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
-from Events.EmojiSelect import EmojiSelect
+
 
 def main():
     db = Database(os.path.join("db", "FromEchoDev240208a_echo_main_db_current.sqlite3"))
@@ -59,11 +61,12 @@ def main():
         print("************ Examples of Login Events ************")
         user_logins = df[(df['user_id'] == 75) & (df['kind']=='Login')]
         print("Emily's Login Events:")
-        print(user_logins[['user_id', 'kind', 'timestamp']])
+        print(user_logins[["user_id", "kind", "timestamp"]])
 
         user_logins = df[(df['user_id'] == 76) & (df['kind'] == 'Login')].sort_values('timestamp')
         print("Crystal's Login Events:")
         print(user_logins[['user_id', 'kind', 'timestamp']])
+
         print("**************************************************")
 
         # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
@@ -80,6 +83,20 @@ def main():
         plt.ylabel('Score')
         plt.legend()
         plt.title('Emoji Changes Over Time for User ' + str(userId))
+        plt.show()
+
+        # show an example of a user's video watching sequence by plotting pauses/plays vs time
+        userId = 74
+        videoId = 'video2'
+        videoDf = VideoWatchSequence(userId, videoId).videoEventsDf
+        # get only time out of timestamp
+        videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:])
+        # plot action vs time
+        videoDf["time_only"] = videoDf["timestamp"]
+        plt.scatter(videoDf["time_only"], videoDf["kind"])
+        plt.xlabel('Time')
+        plt.ylabel('Action')
+        plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
         plt.show()
 
     finally:
