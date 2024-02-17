@@ -1,10 +1,12 @@
 import pandas as pd
+from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
 from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
+import matplotlib.pyplot as plt
 
 def main():
     db = Database(
@@ -57,11 +59,26 @@ def main():
         print((df['user_id']==75)[75])
         user_logins = df[(df['user_id'] == 75) & (df['kind']=='Login')]
         print("Emily's Login Events:")
-        print(user_logins[['user_id', 'kind', 'timestamp']])
+        print(user_logins[["user_id", "kind", "timestamp"]])
 
         user_logins = df[(df['user_id'] == 76) & (df['kind'] == 'Login')].sort_values('timestamp')
         print("Crystal's Login Events:")
         print(user_logins[['user_id', 'kind', 'timestamp']])
+
+        # show an example of a user's video watching sequence by plotting pauses/plays vs time
+        userId = 74
+        videoId = 'video2'
+        videoDf = VideoWatchSequence(userId, videoId).videoEventsDf
+        # get only time out of timestamp
+        videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:])
+        # plot action vs time
+        videoDf["time_only"] = videoDf["timestamp"]
+        plt.scatter(videoDf["time_only"], videoDf["kind"])
+        plt.xlabel('Time')
+        plt.ylabel('Action')
+        plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
+        plt.show()
+
     finally:
         db.close()
 
