@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
@@ -55,6 +56,8 @@ def main():
 
         # create a dataframe for videoactivities
         df = pd.DataFrame.from_dict(Event.events)
+        df.to_csv("output.csv")
+        # pretty print
         print(df)
 
         # Example of time sequence of a user's login events
@@ -93,7 +96,9 @@ def main():
         videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:])
         # plot action vs time
         videoDf["time_only"] = videoDf["timestamp"]
-        plt.scatter(videoDf["time_only"], videoDf["kind"])
+        x = videoDf["time_only"]
+        y = videoDf["kind"]
+        plt.scatter(x,y)
         plt.xlabel('Time')
         plt.ylabel('Action')
         plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )

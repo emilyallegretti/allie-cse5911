@@ -7,6 +7,7 @@ from abc import ABC
 class Event(ABC):
     # keep a static list of all Event objects created, stored as a list of dictionaries
     events=[]
+    # add page attribute
     def __init__(self, metadata,kind):
         self.user_id=metadata['user_id']
         self.kind=kind
