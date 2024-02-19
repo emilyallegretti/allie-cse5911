@@ -28,7 +28,7 @@ def main():
                 Event.add(event)
             else:
                 print("Invalid event")
-        print(Event.events)
+        #print(Event.events)
         # read in announcements, comments, microblog objects
         ann_query="SELECT * from EchoApp_announcement"
         results=db.run_query(ann_query)
@@ -37,7 +37,7 @@ def main():
             ann = create_announcement(row)
             if ann:
                 Announcement.add(ann)
-        print(Announcement.announcements)
+        #print(Announcement.announcements)
 
         comm_query="SELECT * from EchoApp_comment"
         results = db.run_query(comm_query)
@@ -52,14 +52,15 @@ def main():
             microblog = create_microblog(row)
             if microblog:
                 Microblog.add(microblog)
-        print(Microblog.microblogs)
+        #print(Microblog.microblogs)
 
         # create a dataframe for videoactivities
         df = pd.DataFrame.from_dict(Event.events)
         df.to_csv("output.csv")
         # pretty print
         print(df)
-
+        
+        
         # Example of time sequence of a user's login events
         print("************ Examples of Login Events ************")
         user_logins = df[(df['user_id'] == 75) & (df['kind']=='Login')]
@@ -69,9 +70,31 @@ def main():
         user_logins = df[(df['user_id'] == 76) & (df['kind'] == 'Login')].sort_values('timestamp')
         print("Crystal's Login Events:")
         print(user_logins[['user_id', 'kind', 'timestamp']])
-
         print("**************************************************")
 
+        
+        
+        # Get all comments for a specific microblog
+        specific_microblog_id = 6  # replace with the actual microblog_id you want to query
+        comments = Comment.get_comments_for_microblog(specific_microblog_id)
+
+        comments_df = pd.DataFrame(comments)
+
+        print(comments_df)
+        print("-" * 144)
+
+        # Get all comments for a specific author
+        author_id = 30
+        authors_comments = Comment.get_comments_by_author(author_id)
+
+        # Convert the list of comments to a DataFrame for better tabular representation
+        authors_df = pd.DataFrame(authors_comments)
+
+        # Display the DataFrame
+        print(authors_df)
+        
+        
+        
         # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
         userId = 75
         emojiDf = EmojiSelectSequence(userId).emojiEventsDf
