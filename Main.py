@@ -1,4 +1,10 @@
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import os
+
+from EventContainers.EmojiSelectSequence import EmojiSelectSequence
+from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
@@ -6,10 +12,9 @@ from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
 
+
 def main():
-    db = Database(
-        r"db/FromEchoDev240208a_echo_main_db_current.sqlite3"
-    )
+    db = Database(os.path.join("db", "FromEchoDev240208a_echo_main_db_current.sqlite3"))
     db.connect()
 
     try:        
@@ -49,22 +54,27 @@ def main():
                 Microblog.add(microblog)
         #print(Microblog.microblogs)
 
-        # Create a dataframe
+        # create a dataframe for videoactivities
         df = pd.DataFrame.from_dict(Event.events)
-        #print(df)
-
+        df.to_csv("output.csv")
+        # pretty print
+        print(df)
+        
+        
         # Example of time sequence of a user's login events
-        # print((df['user_id']==75)[75])
-        # user_logins = df[(df['user_id'] == 75) & (df['kind']=='Login')]
-        # print("Emily's Login Events:")
-        # print(user_logins[['user_id', 'kind', 'timestamp']])
+        print("************ Examples of Login Events ************")
+        user_logins = df[(df['user_id'] == 75) & (df['kind']=='Login')]
+        print("Emily's Login Events:")
+        print(user_logins[["user_id", "kind", "timestamp"]])
 
-        # user_logins = df[(df['user_id'] == 76) & (df['kind'] == 'Login')].sort_values('timestamp')
-        # print("Crystal's Login Events:")
-        # print(user_logins[['user_id', 'kind', 'timestamp']])
+        user_logins = df[(df['user_id'] == 76) & (df['kind'] == 'Login')].sort_values('timestamp')
+        print("Crystal's Login Events:")
+        print(user_logins[['user_id', 'kind', 'timestamp']])
+        print("**************************************************")
 
         
-        #Get all comments for a specific microblog
+        
+        # Get all comments for a specific microblog
         specific_microblog_id = 6  # replace with the actual microblog_id you want to query
         comments = Comment.get_comments_for_microblog(specific_microblog_id)
 
@@ -77,13 +87,46 @@ def main():
         author_id = 30
         authors_comments = Comment.get_comments_by_author(author_id)
 
-      
         # Convert the list of comments to a DataFrame for better tabular representation
         authors_df = pd.DataFrame(authors_comments)
 
         # Display the DataFrame
         print(authors_df)
         
+        
+        
+        # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
+        userId = 75
+        emojiDf = EmojiSelectSequence(userId).emojiEventsDf
+        # convert to datetime format
+        emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp'])
+        # plot score vs time
+        print("\n******** Examples of Emoji Select Events *********")
+        plt.figure(figsize=(8, 5))
+        plt.plot(emojiDf['timestamp'], emojiDf['IntensityScore'], label='Intensity', marker='o', linestyle='solid')
+        plt.plot(emojiDf['timestamp'], emojiDf['EmotionScore'], label='Emotion', marker='x', linestyle='dashed')
+        plt.xlabel('Time')
+        plt.ylabel('Score')
+        plt.legend()
+        plt.title('Emoji Changes Over Time for User ' + str(userId))
+        plt.show()
+
+        # show an example of a user's video watching sequence by plotting pauses/plays vs time
+        userId = 74
+        videoId = 'video2'
+        videoDf = VideoWatchSequence(userId, videoId).videoEventsDf
+        # get only time out of timestamp
+        videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:])
+        # plot action vs time
+        videoDf["time_only"] = videoDf["timestamp"]
+        x = videoDf["time_only"]
+        y = videoDf["kind"]
+        plt.scatter(x,y)
+        plt.xlabel('Time')
+        plt.ylabel('Action')
+        plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
+        plt.show()
+
     finally:
         db.close()
 
