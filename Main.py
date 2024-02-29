@@ -13,7 +13,7 @@ from Posts.Comment import Comment
 from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
-from Events.UserActivity import calculate_time_spent_per_day, create_user_activity, count_logins_per_day
+from Events.UserActivity import calculate_time_spent_per_day, create_user_activity
 
 
 
