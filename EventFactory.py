@@ -41,7 +41,7 @@ def create_event_object(row):
             return PlayVideo(metadata, row['video_id'])
         # todo : more elifs for page entry objects for each type of page?
         else:
-            return PageEntry(metadata)
+            return PageEntry(metadata,row['page'])
     elif event_type == 'emoji_select':
         return EmojiSelect(metadata, row['emoji_type'])
     

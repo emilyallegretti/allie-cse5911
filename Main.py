@@ -8,7 +8,7 @@ import os
 from EventContainers.EmojiSelectSequence import EmojiSelectSequence
 from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
-from Events.UserActivity import create_user_activity
+from EventContainers.UserActivity import create_user_activity
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
 from Posts.Microblog import Microblog
@@ -92,7 +92,7 @@ def main():
         df_activities['date'] = df_activities['timestamp'].dt.date
         df_activities['time'] = df_activities['timestamp'].dt.time
 
-        user_id = 62  
+        user_id = 62
         user_activities_df = df_activities[df_activities['user_id'] == user_id]
 
         grouped_activities = user_activities_df.groupby('date')
@@ -102,7 +102,7 @@ def main():
         # representation for each day
         for date, group in grouped_activities:
             print(f"Activities for {date}:")
-            print(tabulate(group[['user_id', 'time', 'activityType' ]], headers='keys', tablefmt='pretty'))
+            print(tabulate(group[['user_id', 'time', 'activityType', 'page' ]], headers='keys', tablefmt='pretty'))
             print("\n")  
         
         user_activities_df = user_activities_df.sort_values('timestamp')
