@@ -1,9 +1,8 @@
-from States.State import State
 import pandas as pd
 
-class MicroblogVisitsState(State):
+class MicroblogVisitsSequence:
     def __init__(self, user_id, df_activities):
-        super().__init__(user_id)
+        self.user_id = user_id
         # filter out microblog page entry visits for a given user
         self.df_activities = df_activities[(df_activities['user_id'] == user_id) & 
                                            (df_activities['activityType'] == 'Microblog')].copy()
@@ -11,9 +10,9 @@ class MicroblogVisitsState(State):
         self.df_activities['timestamp'] = pd.to_datetime(self.df_activities['timestamp'])
         self.df_activities['date'] = self.df_activities['timestamp'].dt.date
     
-    def get_visit_counts(self):
+    def count_microblog_visits(self):
         # count visits
-        visit_counts = self.df_activities.groupby('date').size().reset_index(name='visit_count')
+        microblog_visits = self.df_activities.groupby('date').size().reset_index(name='visit_count')
         # sort by date
-        visit_counts_sorted = visit_counts.sort_values(by='date')
-        return visit_counts_sorted
+        microblog_visits_sorted = microblog_visits.sort_values(by='date')
+        return microblog_visits_sorted

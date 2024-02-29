@@ -15,7 +15,7 @@ from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
 
-from States.MicroblogVisitsState import MicroblogVisitsState
+from EventContainers.MicroblogVisitsSequence import MicroblogVisitsSequence
 
 
 def main():
@@ -172,8 +172,8 @@ def main():
         all_visits_data = []  
         # iterate each user to create an instance, and get their visit counts
         for user_id in unique_user_ids:
-            microblog_visits_state = MicroblogVisitsState(user_id, df_activities)
-            visit_counts_sorted = microblog_visits_state.get_visit_counts()
+            microblog_visits_sequence = MicroblogVisitsSequence(user_id, df_activities)
+            visit_counts_sorted = microblog_visits_sequence.count_microblog_visits()
             if not visit_counts_sorted.empty:
                 for index, row in visit_counts_sorted.iterrows():
                     all_visits_data.append([user_id, row['date'], row['visit_count']])
