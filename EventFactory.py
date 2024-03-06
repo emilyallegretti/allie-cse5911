@@ -19,7 +19,6 @@ def create_event_object(row):
     metadata = {
         'user_id': row['user_id'],
         'timestamp': row['timestamp'],
-        'userid': row['user_id'],
     }
 
     if event_type == 'Login':

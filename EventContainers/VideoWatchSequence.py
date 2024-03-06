@@ -22,3 +22,12 @@ class VideoWatchSequence:
             if className=='PlayVideo' or className=='PauseVideo':
                 list.append(item)
         return list
+    
+    # take the entire container/list of events created
+    # start a new empty list
+    # for each event x in original container
+        # if the event is a page entry event, and we are already in page p 
+             # create a brand new page exit event for page p,
+            # append page exit event to empty list 
+        # append event x to new empty list 
+

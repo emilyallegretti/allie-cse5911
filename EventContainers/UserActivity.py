@@ -1,17 +1,15 @@
 from Events.Event import Event
+class UserActivity(Event):
 
-class UserActivity():
-    
     def __init__(self, metadata, activityType, page, activityDetails=None):
-        self.metadata=metadata
+        super().__init__(metadata, self.__class__.__name__)
         self.activityType = activityType
         self.page=page
 
-
-def create_user_activity(self, row):
-    metadata = {
-        'user_id': row['user_id'],
-        'timestamp': row['timestamp'],
-    }
-    return UserActivity(metadata, row['kind'], row['page'],row)
-
+    @staticmethod
+    def create_user_activity(row):
+        metadata = {
+            'user_id': row['user_id'],
+            'timestamp': row['timestamp'],
+        }
+        return UserActivity(metadata, row['kind'], row['page'],row)

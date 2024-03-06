@@ -8,14 +8,17 @@ import os
 from EventContainers.EmojiSelectSequence import EmojiSelectSequence
 from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
-from EventContainers.UserActivity import create_user_activity
+from EventContainers.UserActivity import UserActivity
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
 from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
+from StateContainers.OnMicroblogStateSequence import OnMicroblogSequence
 
 from EventContainers.MicroblogVisitsSequence import MicroblogVisitsSequence
+from States.MicroblogVisitsState import MicroblogVisitsState
+from States.State import State
 
 
 def main():
@@ -63,31 +66,38 @@ def main():
         results = db.run_query(user_activity_query)
         user_activities = []
         for row in results:
-            activity = create_user_activity(row)
+            activity = UserActivity.create_user_activity(row)
             user_activities.append(activity)
 
         
         # create a dataframe for videoactivities
-        df = pd.DataFrame.from_dict(Event.events)
-        df.to_csv("output.csv")
+        events_df = pd.DataFrame.from_dict(Event.events)
+        events_df.to_csv("output.csv")
         # pretty print
-        print(df)
+        print ('all events:')
+        print(events_df)
+        # create updated df of events with synthetic Page Exits
+        page_exit_list = State.populateOrderedEvents(Event.events)
+        print("List of events with page exits:")
+        print(page_exit_list)
+        page_exit_df = pd.DataFrame.from_dict(page_exit_list)
+        print(page_exit_df)
         
         
         # Example of time sequence of a user's login events
         print("************ Examples of Login Events ************")
-        user_logins = df[(df['user_id'] == 75) & (df['kind']=='Login')]
+        user_logins = events_df[(events_df['user_id'] == 75) & (events_df['kind']=='Login')]
         print("Emily's Login Events:")
         print(user_logins[["user_id", "kind", "timestamp"]])
 
-        user_logins = df[(df['user_id'] == 76) & (df['kind'] == 'Login')].sort_values('timestamp')
+        user_logins = events_df[(events_df['user_id'] == 76) & (events_df['kind'] == 'Login')].sort_values('timestamp')
         print("Crystal's Login Events:")
         print(user_logins[['user_id', 'kind', 'timestamp']])
         print("**************************************************")
 
         
         df_activities = pd.DataFrame([vars(a) for a in user_activities])
-
+        print(df_activities)
         df_activities['timestamp'] = pd.to_datetime(df_activities['timestamp'])
         df_activities['date'] = df_activities['timestamp'].dt.date
         df_activities['time'] = df_activities['timestamp'].dt.time
@@ -194,6 +204,13 @@ def main():
         avg_length = Comment.average_comment_length_by_author(author_id)
         print(f"Author {author_id}'s average comment length is {avg_length} characters.")
 
+
+        # Show State objects
+
+        # On Microblog state-- create sequence
+        microblog_state_seq = OnMicroblogSequence(page_exit_df, 75)
+        print("states of being on microblog for user 75")
+        print(microblog_state_seq.states_df)
 
     finally:
         db.close()
