@@ -6,11 +6,14 @@ class VideoWatchSequence:
     def __init__(self, userId, videoId ):
         # first get a list of only pause/play video events
         videoEvents= VideoWatchSequence._filterEvents()
-        print(videoEvents)
         # create dataframe out of resulting list
         df = pd.DataFrame.from_dict(videoEvents)
+        print(df)
+        print(videoId)
+        print(userId)
         # create instance variable that filters this df based on userId, videoId
         self.videoEventsDf = df[(df['user_id'] == userId) & (df['videoId']==videoId)].sort_values("timestamp")
+        print(self.videoEventsDf)
 
 
     # filters Event.events to get only pause and play events

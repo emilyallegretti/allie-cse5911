@@ -15,6 +15,8 @@ from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
 from StateContainers.OnMicroblogStateSequence import OnMicroblogSequence
+from StateContainers.OnVideoPageStateSequence import OnVideoPageSequence
+from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequence
 
 from EventContainers.MicroblogVisitsSequence import MicroblogVisitsSequence
 from States.MicroblogVisitsState import MicroblogVisitsState
@@ -36,7 +38,7 @@ def main():
                 Event.add(event)
             else:
                 print("Invalid event")
-        #print(Event.events)
+        # print(Event.events)
         # read in announcements, comments, microblog objects
         ann_query="SELECT * from EchoApp_announcement"
         results=db.run_query(ann_query)
@@ -45,7 +47,7 @@ def main():
             ann = create_announcement(row)
             if ann:
                 Announcement.add(ann)
-        #print(Announcement.announcements)
+        # print(Announcement.announcements)
 
         comm_query="SELECT * from EchoApp_comment"
         results = db.run_query(comm_query)
@@ -60,7 +62,7 @@ def main():
             microblog = create_microblog(row)
             if microblog:
                 Microblog.add(microblog)
-        #print(Microblog.microblogs)
+        # print(Microblog.microblogs)
 
         user_activity_query = "SELECT * FROM EchoApp_videoactivity"
         results = db.run_query(user_activity_query)
@@ -69,7 +71,6 @@ def main():
             activity = UserActivity.create_user_activity(row)
             user_activities.append(activity)
 
-        
         # create a dataframe for videoactivities
         events_df = pd.DataFrame.from_dict(Event.events)
         events_df.to_csv("output.csv")
@@ -82,8 +83,7 @@ def main():
         print(page_exit_list)
         page_exit_df = pd.DataFrame.from_dict(page_exit_list)
         print(page_exit_df)
-        
-        
+
         # Example of time sequence of a user's login events
         print("************ Examples of Login Events ************")
         user_logins = events_df[(events_df['user_id'] == 75) & (events_df['kind']=='Login')]
@@ -95,7 +95,6 @@ def main():
         print(user_logins[['user_id', 'kind', 'timestamp']])
         print("**************************************************")
 
-        
         df_activities = pd.DataFrame([vars(a) for a in user_activities])
         print(df_activities)
         df_activities['timestamp'] = pd.to_datetime(df_activities['timestamp'])
@@ -114,7 +113,7 @@ def main():
             print(f"Activities for {date}:")
             print(tabulate(group[['user_id', 'time', 'activityType', 'page' ]], headers='keys', tablefmt='pretty'))
             print("\n")  
-        
+
         user_activities_df = user_activities_df.sort_values('timestamp')
 
         
@@ -136,9 +135,7 @@ def main():
 
         # Display the DataFrame
         print(authors_df)
-        
-        
-        
+
         # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
         userId = 75
         emojiDf = EmojiSelectSequence(userId).emojiEventsDf
@@ -170,7 +167,6 @@ def main():
         plt.ylabel('Action')
         plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
         plt.show()
-
 
         # Microblog Visited Frequency
         # get all users' id
@@ -211,6 +207,34 @@ def main():
         microblog_state_seq = OnMicroblogSequence(page_exit_df, 75)
         print("states of being on microblog for user 75")
         print(microblog_state_seq.states_df)
+
+        # On video page-- state sequence
+        on_video_seq = OnVideoPageSequence(page_exit_df, 74)
+        print("states of being on videos page for user 74")
+        video_seq_df=on_video_seq.states_df
+        print(video_seq_df)
+
+        # Watching video -- state sequence
+        watching_video_states = WatchingVideoStateSequence(74, 'video2')
+        print('states of watching video2 for user 74')
+        watching_df = watching_video_states.states_df
+        print(watching_video_states.states_df)
+
+        # plot
+        # create list of tuples of start time and end time values
+        ranges=[]
+        for row in watching_df.values:
+            print(row)
+            print(row[2])
+            print(row[3])
+            ranges.append((row[2],row[3]))
+        x=video_seq_df['kind']
+        print(video_seq_df['kind'])
+        for x_pair in ranges:
+            plt.plot(x_pair, [video_seq_df["kind"].iloc[0]]*2)
+        # plt.plot(video_seq_df['startTime'],  video_seq_df['kind'])
+        # plt.plot(video_seq_df['endTime'], video_seq_df['kind'])
+        plt.show()
 
     finally:
         db.close()

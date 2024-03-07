@@ -1,6 +1,7 @@
 # each OnMicroblogSequence represents a Dataframe containing all of a specific user's microblog page duration sessions.
 
 import  pandas as pd
+from States.OnMicroblogPage import OnMicroblogPage
 
 from States.State import State
 
@@ -14,6 +15,7 @@ class OnMicroblogSequence():
         self.states_df = pd.DataFrame.from_dict(self._states)
 
     # creates a list of all OnMicroblogPage state objects associated with the specific userId
+        # TODO: Microblog enter and exit events could be made into an EventSequence to make this method easier
     def getStates(self, events_df: pd.DataFrame):
         states = []
         # first make sure df is sorted by timestamp
@@ -34,11 +36,11 @@ class OnMicroblogSequence():
                 # create new State and append it to running list
                 states.append(
                     (
-                        State(
+                        OnMicroblogPage(
                             row[0],
                             starttime,
                             endtime,
-                            "OnDiscussionBoard"
+                            "OnMicroblogPage"
                         )
                     ).__dict__
                 )
