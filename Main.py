@@ -106,8 +106,6 @@ def main():
         user_activities_df = user_activities_df.sort_values('timestamp')
 
         
-        
-        
         # Get all comments for a specific microblog
         specific_microblog_id = 6  # replace with the actual microblog_id you want to query
         comments = Comment.get_comments_for_microblog(specific_microblog_id)
@@ -160,6 +158,18 @@ def main():
         plt.ylabel('Action')
         plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
         plt.show()
+
+        print("**************************************************")
+
+        author_id = 1
+
+        # Get the number of comments by the author
+        num_comments = Comment.count_comments_by_author(author_id)
+        print(f"Author {author_id} has made {num_comments} comments.")
+
+        # Get the average comment length by the author
+        avg_length = Comment.average_comment_length_by_author(author_id)
+        print(f"Author {author_id}'s average comment length is {avg_length} characters.")
 
     finally:
         db.close()
