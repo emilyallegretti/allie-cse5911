@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from tabulate import tabulate  # New import
+from tabulate import tabulate
 import os
 
 from EventContainers.EmojiSelectSequence import EmojiSelectSequence
@@ -14,6 +14,8 @@ from Posts.Comment import Comment
 from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
+
+from EventContainers.MicroblogVisitsSequence import MicroblogVisitsSequence
 
 
 def main():
@@ -159,6 +161,27 @@ def main():
         plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
         plt.show()
 
+
+        # Microblog Visited Frequency
+        # get all users' id
+        unique_user_ids = df_activities['user_id'].unique()
+        print("\nMicroblog Visited Frequency for All Users:")
+        # initialize a list for all visits data
+        all_visits_data = []  
+        # iterate each user to create an instance, and get their visit counts
+        for user_id in unique_user_ids:
+            microblog_visits_sequence = MicroblogVisitsSequence(user_id, df_activities)
+            visit_counts_sorted = microblog_visits_sequence.count_microblog_visits()
+            if not visit_counts_sorted.empty:
+                for index, row in visit_counts_sorted.iterrows():
+                    all_visits_data.append([user_id, row['date'], row['visit_count']])
+        # convert all visits data to a DataFrame for easily showing the result
+        df_all_visits = pd.DataFrame(all_visits_data, columns=['User ID', 'Date', 'Visit Count'])
+        # sort the DataFrame by user_id and date
+        df_all_visits_sorted = df_all_visits.sort_values(by=['User ID', 'Date'])
+        # show the table
+        print(tabulate(df_all_visits_sorted, headers='keys', tablefmt='pretty'))
+
         print("**************************************************")
 
         author_id = 1
@@ -170,6 +193,7 @@ def main():
         # Get the average comment length by the author
         avg_length = Comment.average_comment_length_by_author(author_id)
         print(f"Author {author_id}'s average comment length is {avg_length} characters.")
+
 
     finally:
         db.close()
