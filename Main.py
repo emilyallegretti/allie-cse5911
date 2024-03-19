@@ -115,7 +115,6 @@ def main():
 
         user_activities_df = user_activities_df.sort_values('timestamp')
 
-        
         # Get all comments for a specific microblog
         specific_microblog_id = 6  # replace with the actual microblog_id you want to query
         comments = Comment.get_comments_for_microblog(specific_microblog_id)
@@ -199,7 +198,6 @@ def main():
         avg_length = Comment.average_comment_length_by_author(author_id)
         print(f"Author {author_id}'s average comment length is {avg_length} characters.")
 
-
         # Show State objects
 
         # On Microblog state-- create sequence
@@ -220,6 +218,9 @@ def main():
         print(watching_video_states.states_df)
 
         # plot
+        # video watching
+        watching_df["startTime"] = pd.to_datetime(watching_df["startTime"])
+        watching_df['endTime'] = pd.to_datetime(df['endTime'])
         # create list of tuples of start time and end time values
         ranges=[]
         for row in watching_df.values:
