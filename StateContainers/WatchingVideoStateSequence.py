@@ -25,14 +25,13 @@ class WatchingVideoStateSequence:
         states = []
         starttime = None
         for row in video_df.values:
-            print(row)
             # row[1] is type of event, row[2] is timestamp, row[3] is videoid
-            print(row[1])
             if row[1]=='PlayVideo':
                 starttime=row[2]
-            if row[1]=='PauseVideo':
+            if row[1]=='PauseVideo' and starttime is not None:
                 endtime = row[2]
                 states.append((WatchingVideo(row[0], self.video_id, starttime, endtime, 'WatchingVideo')).__dict__)
+                starttime = None
                 print(states)
         return states
 

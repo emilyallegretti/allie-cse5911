@@ -19,7 +19,6 @@ from StateContainers.OnVideoPageStateSequence import OnVideoPageSequence
 from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequence
 
 from EventContainers.MicroblogVisitsSequence import MicroblogVisitsSequence
-from States.MicroblogVisitsState import MicroblogVisitsState
 from States.State import State
 
 
