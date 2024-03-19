@@ -2,7 +2,7 @@ import pandas as pd
 
 class MicroblogVisitsSequence:
     def __init__(self, user_id, df_activities):
-        super().__init__(user_id, None, None)
+        self.user_id = user_id
         # filter out microblog page entry visits for a given user
         self.df_activities = df_activities[(df_activities['user_id'] == user_id) & 
                                            (df_activities['page'] == 'Microblog')].copy()
