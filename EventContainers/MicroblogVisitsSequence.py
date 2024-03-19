@@ -2,10 +2,10 @@ import pandas as pd
 
 class MicroblogVisitsSequence:
     def __init__(self, user_id, df_activities):
-        self.user_id = user_id
+        super().__init__(user_id, None, None)
         # filter out microblog page entry visits for a given user
         self.df_activities = df_activities[(df_activities['user_id'] == user_id) & 
-                                           (df_activities['activityType'] == 'Microblog')].copy()
+                                           (df_activities['page'] == 'Microblog')].copy()
         # convert timestamp to datetime, and extract the date
         self.df_activities['timestamp'] = pd.to_datetime(self.df_activities['timestamp'])
         self.df_activities['date'] = self.df_activities['timestamp'].dt.date
