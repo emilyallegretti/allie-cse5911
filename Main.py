@@ -13,7 +13,7 @@ from Posts.Comment import Comment
 from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
-from Events.UserActivity import calculate_time_spent_per_day, create_user_activity
+from Events.UserActivity import calculate_time_spent_per_day, count_login_page_activities_per_day, create_user_activity
 
 
 
@@ -110,15 +110,24 @@ def main():
 
         user_activities_df = user_activities_df.sort_values('timestamp')
 
-        
+        # printing time spent per day
         df_activities = pd.DataFrame([vars(a) for a in user_activities])
         df_time_spent = calculate_time_spent_per_day(df_activities, user_id)
 
         print(f"\nTotal time spent per day by user {user_id}:")
         print(tabulate(df_time_spent, headers='keys', tablefmt='pretty'))
 
-        
-        
+
+        # printing login count per day
+        login_count_per_user_day = count_login_page_activities_per_day(user_activities, user_id)
+
+        if not login_count_per_user_day.empty:
+            print(tabulate(login_count_per_user_day, headers='keys', tablefmt='pretty'))
+        else:
+            print(f"No 'Login Page' activities found for user {user_id}.")
+
+
+
         # Get all comments for a specific microblog
         specific_microblog_id = 6  # replace with the actual microblog_id you want to query
         comments = Comment.get_comments_for_microblog(specific_microblog_id)

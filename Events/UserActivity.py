@@ -41,4 +41,22 @@ def calculate_time_spent_per_day(activities, user_id=None):
 
         return time_spent[['total_time_spent']].reset_index()
 
-        
+
+
+def count_login_page_activities_per_day(activities, user_id=None):
+    if not isinstance(activities, pd.DataFrame):
+        df_activities = pd.DataFrame([vars(a) for a in activities])
+    else:
+        df_activities = activities
+
+    df_activities['timestamp'] = pd.to_datetime(df_activities['timestamp'])
+    df_activities['date'] = df_activities['timestamp'].dt.date
+    
+    login_activities = df_activities[df_activities['activityType'] == 'Login Page']
+    
+    if user_id is not None:
+        login_activities = login_activities[login_activities['user_id'] == user_id]
+
+    login_count_per_user_day = login_activities.groupby(['user_id', 'date']).size().reset_index(name='login_count')
+    
+    return login_count_per_user_day
