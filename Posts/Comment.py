@@ -32,3 +32,26 @@ class Comment:
             if comment['authorId'] == author_id:
                 author_comments.append(comment)
         return author_comments
+    
+    @classmethod
+    # returns the number of comments made by a specific author
+    def count_comments_by_author(cls, author_id):
+        
+        count = 0
+        for comment in cls.comments:
+            if comment['authorId'] == author_id:
+                count += 1
+        return count
+
+    @classmethod
+    # returns the average length of comments made by a specific author
+    def average_comment_length_by_author(cls, author_id):
+        total_length = 0
+        count = 0
+        for comment in cls.comments:
+            if comment['authorId'] == author_id:
+                total_length += len(comment['comment'])
+                count += 1
+        if count == 0:
+            return 0 
+        return total_length / count
