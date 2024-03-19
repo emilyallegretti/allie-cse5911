@@ -122,6 +122,7 @@ def main():
         login_count_per_user_day = count_login_page_activities_per_day(user_activities, user_id)
 
         if not login_count_per_user_day.empty:
+            print(f"Number of 'Login Page' activities per day for user {user_id}:")
             print(tabulate(login_count_per_user_day, headers='keys', tablefmt='pretty'))
         else:
             print(f"No 'Login Page' activities found for user {user_id}.")
