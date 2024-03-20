@@ -56,3 +56,27 @@ def test_get_comments_by_author():
 
     comments_by_author1 = Comment.get_comments_by_author(1)
     assert len(comments_by_author1) == 1 and all(com['authorId'] == 1 for com in comments_by_author1), "Should retrieve comments by author 1 only"
+
+def test_average_comment_length_by_author():
+    Comment.comments.clear()
+    comments = [
+        Comment(commentId=1, comment="Author 1's comment", createdDate="2024-03-01", updatedDate="2024-03-02", authorId=1, microblogId=1),
+        Comment(commentId=2, comment="Author 1's second comment", createdDate="2024-03-02", updatedDate="2024-03-04", authorId=1, microblogId=2),
+    ]
+    for comment in comments:
+        Comment.add(comment)
+
+    average_comment_length_by_author1 = Comment.average_comment_length_by_author(1)
+    assert average_comment_length_by_author1 == 21.5, "Should calculate average comment length by author 1"
+
+def test_count_comments_by_author():
+    Comment.comments.clear()
+    comments = [
+        Comment(commentId=1, comment="Author 1's comment", createdDate="2024-03-01", updatedDate="2024-03-02", authorId=1, microblogId=1),
+        Comment(commentId=2, comment="Author 1's second comment", createdDate="2024-03-02", updatedDate="2024-03-04", authorId=1, microblogId=2),
+    ]
+    for comment in comments:
+        Comment.add(comment)
+
+    count_comments_by_author1 = Comment.count_comments_by_author(1)
+    assert count_comments_by_author1 == 2, "Should count comments by author 1"

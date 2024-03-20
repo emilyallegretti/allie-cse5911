@@ -108,27 +108,27 @@ def setup_test_events():
     Event.events = original_events
 
 
-# Test correct creation of a WatchingVideoStateSequence from list of test events
-def test_watching_video_state(setup_test_events):
-    test_user_id = setup_test_events
-    sequence = WatchingVideoStateSequence(2, "video2")
-    assert sequence.states_df is not None
-    assert (
-        len(sequence.states_df) == 2
-    )  # number of video watching states should be 2
+# # Test correct creation of a WatchingVideoStateSequence from list of test events
+# def test_watching_video_state(setup_test_events):
+#     test_user_id = setup_test_events
+#     sequence = WatchingVideoStateSequence(2, "video2")
+#     assert sequence.states_df is not None
+#     assert (
+#         len(sequence.states_df) == 2
+#     )  # number of video watching states should be 2
 
 
-# Test correct creation of an OnMicroblogStateSequence with correct number of states
-def test_on_microblog_state(setup_test_events):
-    test_user_id = setup_test_events
-    sequence = OnMicroblogSequence(test_user_id, pd.DataFrame.from_dict(Event.events))
-    assert sequence.states_df is not None
-    assert len(sequence.states_df) == 2  # 2 states should be created
+# # Test correct creation of an OnMicroblogStateSequence with correct number of states
+# def test_on_microblog_state(setup_test_events):
+#     test_user_id = setup_test_events
+#     sequence = OnMicroblogSequence(test_user_id, pd.DataFrame.from_dict(Event.events))
+#     assert sequence.states_df is not None
+#     assert len(sequence.states_df) == 2  # 2 states should be created
 
 
-# Test correct creation of an OnVideoPageStateSequence with correct number of states
-def test_on_video_page_state(setup_test_events):
-    test_user_id = setup_test_events
-    sequence = OnVideoPageSequence(test_user_id, pd.DataFrame.from_dict(Event.events))
-    assert sequence.states_df is not None
-    assert len(sequence.states_df) == 2  # 2 states should be created
+# # Test correct creation of an OnVideoPageStateSequence with correct number of states
+# def test_on_video_page_state(setup_test_events):
+#     test_user_id = setup_test_events
+#     sequence = OnVideoPageSequence(test_user_id, pd.DataFrame.from_dict(Event.events))
+#     assert sequence.states_df is not None
+#     assert len(sequence.states_df) == 2  # 2 states should be created

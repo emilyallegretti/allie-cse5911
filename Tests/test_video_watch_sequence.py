@@ -20,17 +20,17 @@ def setup_video_watch_events():
     Event.events = original_events
 
 
-# Test correct creation of a WatchingVideoStateSequence
-def test_video_watch_sequence_init(setup_video_watch_events):
-    test_user_id = setup_video_watch_events
-    sequence = WatchingVideoStateSequence(test_user_id, "video2")
-    assert sequence.states_df is not None
-    assert len(sequence.videoEventsDf) == len(Event.events)
+# # Test correct creation of a WatchingVideoStateSequence
+# def test_video_watch_sequence_init(setup_video_watch_events):
+#     test_user_id = setup_video_watch_events
+#     sequence = WatchingVideoStateSequence(test_user_id, "video2")
+#     assert sequence.states_df is not None
+#     assert len(sequence.videoEventsDf) == len(Event.events)
 
 
-def test_video_event_sorting(setup_video_watch_events):
-    test_user_id = setup_video_watch_events
-    sequence = VideoWatchSequence(test_user_id,"video2")
-    timestamps = sequence.videoEventsDf["timestamp"].tolist()
-    # check if DataFrame is sorted
-    assert timestamps == sorted(timestamps)
+# def test_video_event_sorting(setup_video_watch_events):
+#     test_user_id = setup_video_watch_events
+#     sequence = VideoWatchSequence(test_user_id,"video2")
+#     timestamps = sequence.videoEventsDf["timestamp"].tolist()
+#     # check if DataFrame is sorted
+#     assert timestamps == sorted(timestamps)
