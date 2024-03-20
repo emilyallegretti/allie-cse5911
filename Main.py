@@ -117,14 +117,12 @@ def main():
 
         user_activities_df = user_activities_df.sort_values('timestamp')
 
-
         # printing time spent per day
         df_activities = pd.DataFrame([vars(a) for a in user_activities])
         df_time_spent = calculate_time_spent_per_day(df_activities, user_id)
 
         print(f"\nTotal time spent per day by user {user_id}:")
         print(tabulate(df_time_spent, headers='keys', tablefmt='pretty'))
-
 
         # printing login count per day
         login_count_per_user_day = count_login_page_activities_per_day(user_activities, user_id)
@@ -134,9 +132,6 @@ def main():
             print(tabulate(login_count_per_user_day, headers='keys', tablefmt='pretty'))
         else:
             print(f"No 'Login Page' activities found for user {user_id}.")
-
-
-            
 
         # Get all comments for a specific microblog
         specific_microblog_id = 6  # replace with the actual microblog_id you want to query
@@ -323,6 +318,20 @@ def main():
 
         date_format = DateFormatter('%Y-%m-%d %H:%M:%S.%f')
         ax.xaxis.set_major_formatter(date_format)
+
+        mb_count = Comment.count_comments_by_author(76)
+        avg_len = Comment.average_comment_length_by_author(76)
+        login_amt = count_login_page_activities_per_day(user_activities, 76)
+        print(login_amt["login_count"].sum())
+        print(login_amt["login_count"].count())
+        avg_logins = login_amt['login_count'].sum() / login_amt['login_count'].count()
+        text_content = """
+            Number of Microblog posts made by this author: {}
+            Average Length of Microblog Posts In Characters: {}
+            Avg Amount of Logins Per Day: {}       
+        """.format(mb_count, avg_len, avg_logins)
+        ax.text(0.3, 0.5, text_content, transform=ax.transAxes,
+        fontsize=12, ha='center', va='center')
 
         plt.show()
 

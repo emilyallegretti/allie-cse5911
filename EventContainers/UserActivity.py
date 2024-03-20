@@ -51,7 +51,7 @@ def count_login_page_activities_per_day(activities, user_id=None):
         df_activities['timestamp'] = pd.to_datetime(df_activities['timestamp'])
         df_activities['date'] = df_activities['timestamp'].dt.date
         
-        login_activities = df_activities[df_activities['activityType'] == 'Login Page']
+        login_activities = df_activities[df_activities['activityType'] == 'Login']
         
         if user_id is not None:
             login_activities = login_activities[login_activities['user_id'] == user_id]
