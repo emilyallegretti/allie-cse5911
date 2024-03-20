@@ -9,7 +9,7 @@ import os
 from EventContainers.EmojiSelectSequence import EmojiSelectSequence
 from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
-from EventContainers.UserActivity import UserActivity
+from EventContainers.UserActivity import UserActivity, calculate_time_spent_per_day, count_login_page_activities_per_day
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
 from Posts.Microblog import Microblog
@@ -116,6 +116,27 @@ def main():
             print("\n")  
 
         user_activities_df = user_activities_df.sort_values('timestamp')
+
+
+        # printing time spent per day
+        df_activities = pd.DataFrame([vars(a) for a in user_activities])
+        df_time_spent = calculate_time_spent_per_day(df_activities, user_id)
+
+        print(f"\nTotal time spent per day by user {user_id}:")
+        print(tabulate(df_time_spent, headers='keys', tablefmt='pretty'))
+
+
+        # printing login count per day
+        login_count_per_user_day = count_login_page_activities_per_day(user_activities, user_id)
+
+        if not login_count_per_user_day.empty:
+            print(f"Number of 'Login Page' activities per day for user {user_id}:")
+            print(tabulate(login_count_per_user_day, headers='keys', tablefmt='pretty'))
+        else:
+            print(f"No 'Login Page' activities found for user {user_id}.")
+
+
+            
 
         # Get all comments for a specific microblog
         specific_microblog_id = 6  # replace with the actual microblog_id you want to query

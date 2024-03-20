@@ -2,7 +2,7 @@ import pytest
 from Events.Event import Event
 from Events.Login import Login
 from Events.Logout import Logout
-from Events.UserActivity import UserActivity, create_user_activity
+from EventContainers.UserActivity import UserActivity
 
 # Test Event Addition
 def test_event_addition():
@@ -36,7 +36,7 @@ def test_event_addition():
 ])
 
 def test_user_activity_creation(metadata, expected_activity_type):
-    user_activity = create_user_activity(metadata)
+    user_activity = UserActivity.create_user_activity(metadata)
     assert isinstance(user_activity, UserActivity), "Expected to create a UserActivity instance."
     assert user_activity.activityType == expected_activity_type, f"Expected activityType to be {expected_activity_type}."
     assert user_activity.user_id == metadata['user_id'], "The user_id should match the input data."
