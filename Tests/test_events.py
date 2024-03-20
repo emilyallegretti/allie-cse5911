@@ -31,8 +31,8 @@ def test_event_addition():
 
 # Test User Activity Creation
 @pytest.mark.parametrize("metadata, expected_activity_type", [
-    ({'user_id': '1', 'timestamp': '2024-03-03 00:00:00', 'page': 'Login Page'}, 'Login Page'),
-    ({'user_id': '2', 'timestamp': '2024-03-04 01:00:00', 'page': 'Home'}, 'Home'),
+    ({'user_id': '1', 'timestamp': '2024-03-03 00:00:00', 'page': 'Login Page', 'kind':'Login'}, 'Login Page'),
+    ({'user_id': '2', 'timestamp': '2024-03-04 01:00:00', 'page': 'Home','kind':'Page Entry'}, 'Home'),
 ])
 
 def test_user_activity_creation(metadata, expected_activity_type):

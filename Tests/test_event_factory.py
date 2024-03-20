@@ -21,7 +21,7 @@ from Posts.Microblog import Microblog
     ({'kind': 'Page Entry', 'user_id': 1, 'timestamp': '2024-03-03', 'action': 'pause', 'video_id': 'video1'}, PauseVideo),
     ({'kind': 'Page Entry', 'user_id': 1, 'timestamp': '2024-03-03', 'action': 'play', 'video_id': 'video1'}, PlayVideo),
     ({'kind': 'emoji_select', 'user_id': 1, 'timestamp': '2024-03-02', 'emoji_type': 'A'}, EmojiSelect),
-    ({'kind': 'Page Entry', 'user_id': 1, 'timestamp': '2024-03-04', 'action': 'No action'}, PageEntry),
+    ({'kind': 'Page Entry', 'user_id': 1, 'timestamp': '2024-03-04', 'action': 'No action','page':'Microblog_details'}, PageEntry),
 ])
 
 def test_create_event_object(event_row_data, expected_type):
