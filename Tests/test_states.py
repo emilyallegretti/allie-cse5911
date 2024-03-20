@@ -111,7 +111,7 @@ def setup_test_events():
 # Test correct creation of a WatchingVideoStateSequence from list of test events
 def test_watching_video_state(setup_test_events):
     test_user_id = setup_test_events
-    sequence = WatchingVideoStateSequence(test_user_id, "video2")
+    sequence = WatchingVideoStateSequence(2, "video2")
     assert sequence.states_df is not None
     assert (
         len(sequence.states_df) == 2
