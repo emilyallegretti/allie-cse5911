@@ -24,6 +24,7 @@ class VideoWatchSequence:
             className=item['kind']
             if className=='PlayVideo' or className=='PauseVideo':
                 list.append(item)
+        print('test ')
         return list
     
     # take the entire container/list of events created
