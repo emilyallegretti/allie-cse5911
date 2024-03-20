@@ -26,7 +26,6 @@ class OnMicroblogSequence():
         # as a dict object
         starttime = None
         for row in events_df.values:
-            print('in microblog state sequence')
             print(row)
             # index 1 corresponds to 'kind' attribute, 3 to 'page', 2 to 'timestamp'
             if row[1] == 'PageEntry' and row[3] == 'Microblog_details':

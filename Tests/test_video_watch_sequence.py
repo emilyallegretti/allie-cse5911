@@ -1,11 +1,6 @@
 import pytest
 from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
-from Events.Login import Login
-from Events.Logout import Logout
-from Events.PauseVideo import PauseVideo
-from Events.PlayVideo import PlayVideo
-from Events.UserActivity import UserActivity, create_user_activity
 from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequence
 
 
@@ -35,7 +30,7 @@ def test_video_watch_sequence_init(setup_video_watch_events):
 
 def test_video_event_sorting(setup_video_watch_events):
     test_user_id = setup_video_watch_events
-    sequence = VideoWatchSequence(test_user_id)
+    sequence = VideoWatchSequence(test_user_id,"video2")
     timestamps = sequence.videoEventsDf["timestamp"].tolist()
     # check if DataFrame is sorted
     assert timestamps == sorted(timestamps)

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from matplotlib.dates import DateFormatter
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tabulate import tabulate
@@ -14,6 +15,7 @@ from Posts.Comment import Comment
 from Posts.Microblog import Microblog
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
+from StateContainers.LoggedInStateSequence import LoggedInSequence
 from StateContainers.OnMicroblogStateSequence import OnMicroblogSequence
 from StateContainers.OnVideoPageStateSequence import OnVideoPageSequence
 from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequence
@@ -148,7 +150,7 @@ def main():
         plt.ylabel('Score')
         plt.legend()
         plt.title('Emoji Changes Over Time for User ' + str(userId))
-        plt.show()
+        # plt.show()
 
         # show an example of a user's video watching sequence by plotting pauses/plays vs time
         userId = 74
@@ -160,11 +162,11 @@ def main():
         videoDf["time_only"] = videoDf["timestamp"]
         x = videoDf["time_only"]
         y = videoDf["kind"]
-        plt.scatter(x,y)
+        # plt.scatter(x,y)
         plt.xlabel('Time')
         plt.ylabel('Action')
         plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
-        plt.show()
+        # plt.show()
 
         # Microblog Visited Frequency
         # get all users' id
@@ -201,39 +203,106 @@ def main():
         # Show State objects
 
         # On Microblog state-- create sequence
-        microblog_state_seq = OnMicroblogSequence(page_exit_df, 75)
-        print("states of being on microblog for user 75")
-        print(microblog_state_seq.states_df)
+        microblog_state_seq = OnMicroblogSequence(page_exit_df, 76)
+        print("states of being on microblog for user 76")
+        on_mb_df = microblog_state_seq.states_df
+        print(on_mb_df)
 
         # On video page-- state sequence
-        on_video_seq = OnVideoPageSequence(page_exit_df, 74)
-        print("states of being on videos page for user 74")
+        on_video_seq = OnVideoPageSequence(page_exit_df, 76)
+        print("states of being on videos page for user 76")
         video_seq_df=on_video_seq.states_df
         print(video_seq_df)
 
         # Watching video -- state sequence
-        watching_video_states = WatchingVideoStateSequence(74, 'video2')
-        print('states of watching video2 for user 74')
+        watching_video_states = WatchingVideoStateSequence(76, 'video1')
+        print('states of watching video1 for user 76')
         watching_df = watching_video_states.states_df
         print(watching_video_states.states_df)
+        # Logged In -- state sequnece
+        logged_in_states = LoggedInSequence(page_exit_df, 76)
+        print("states of being logged in for user 76")
+        logged_in_df = logged_in_states.states_df
+        print(logged_in_df)
 
         # plot
         # video watching
         watching_df["startTime"] = pd.to_datetime(watching_df["startTime"])
-        watching_df['endTime'] = pd.to_datetime(df['endTime'])
-        # create list of tuples of start time and end time values
-        ranges=[]
-        for row in watching_df.values:
-            print(row)
-            print(row[2])
-            print(row[3])
-            ranges.append((row[2],row[3]))
-        x=video_seq_df['kind']
-        print(video_seq_df['kind'])
-        for x_pair in ranges:
-            plt.plot(x_pair, [video_seq_df["kind"].iloc[0]]*2)
-        # plt.plot(video_seq_df['startTime'],  video_seq_df['kind'])
-        # plt.plot(video_seq_df['endTime'], video_seq_df['kind'])
+        watching_df['endTime'] = pd.to_datetime(watching_df['endTime'])
+        video_seq_df["startTime"] = pd.to_datetime(video_seq_df["startTime"])
+        print(video_seq_df['endTime'])
+        video_seq_df["endTime"] = pd.to_datetime(
+            video_seq_df["endTime"], format="%Y-%m-%d %H:%M:%S:%f"
+        )
+        on_mb_df["startTime"] = pd.to_datetime(on_mb_df["startTime"])
+        on_mb_df["endTime"] = pd.to_datetime(
+            on_mb_df["endTime"], format="%Y-%m-%d %H:%M:%S:%f"
+        )
+        logged_in_df["startTime"] = pd.to_datetime(logged_in_df["startTime"])
+        logged_in_df["endTime"] = pd.to_datetime(
+            logged_in_df["endTime"], format="mixed"
+        )
+        print(authors_df)
+        authors_comments = Comment.get_comments_by_author(76)
+        # Convert the list of comments to a DataFrame for better tabular representation
+        authors_df = pd.DataFrame(authors_comments)
+        authors_df["createdDate"] = pd.to_datetime(authors_df["createdDate"], format="mixed")
+        authors_df["updatedDate"] = pd.to_datetime(authors_df["updatedDate"], format="mixed")
+
+        fig, ax = plt.subplots()
+        # Watching Video State
+        for _, row in watching_df.iterrows():
+            ax.plot(
+                [row["startTime"], row["endTime"]],
+                [row["kind"], row["kind"]],
+                marker="o", color='purple'
+            )
+        for _, row in video_seq_df.iterrows():
+            ax.plot(
+                [row["startTime"], row["endTime"]],
+                [row["kind"], row["kind"]],
+                marker="o", color='red'
+            )
+        for _, row in microblog_state_seq.states_df.iterrows():
+            ax.plot(
+                [row["startTime"], row["endTime"]],
+                [row["kind"], row["kind"]],
+                marker="o", color='blue'
+            )
+        for _, row in on_mb_df.iterrows():
+            ax.plot(
+                [row["startTime"], row["endTime"]],
+                [row["kind"], row["kind"]],
+                marker="o",
+                color="blue",
+            )
+        for _, row in logged_in_df.iterrows():
+            ax.plot(
+                [row["startTime"], row["endTime"]],
+                [row["kind"], row["kind"]],
+                marker="o",
+                color="blue",
+            )
+            # microblog comment instances
+        ax.plot(authors_df['createdDate'], ['PostedOnMicroblog'],marker="o", color="black")
+        ax.plot(
+            authors_df["updatedDate"], ["UpdatedMicrblogComment"], marker="o", color="black"
+        )
+
+        # Set labels and title
+        # Customize font for different text elements
+        title_font = {'family': 'serif', 'color': 'blue', 'weight': 'bold', 'size': 16}
+        axis_label_font = {'family': 'sans-serif', 'color': 'green', 'weight': 'normal', 'size': 12}
+        tick_label_font = {'family': 'monospace', 'color': 'red', 'weight': 'normal', 'size': 10}   
+        ax.set_xlabel('Timestamp', fontdict=axis_label_font)
+        ax.set_ylabel('Kind of Interaction', fontdict=axis_label_font)
+        ax.set_title('Timeline of Interactions for User 76', fontdict=title_font)
+        plt.xticks(rotation=20)
+        plt.xticks(fontsize=6)
+
+        date_format = DateFormatter('%Y-%m-%d %H:%M:%S.%f')
+        ax.xaxis.set_major_formatter(date_format)
+
         plt.show()
 
     finally:

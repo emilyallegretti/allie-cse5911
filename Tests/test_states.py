@@ -2,11 +2,6 @@ import pandas as pd
 import pytest
 from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
-from Events.Login import Login
-from Events.Logout import Logout
-from Events.PauseVideo import PauseVideo
-from Events.PlayVideo import PlayVideo
-from Events.UserActivity import UserActivity, create_user_activity
 from StateContainers.OnMicroblogStateSequence import OnMicroblogSequence
 from StateContainers.OnVideoPageStateSequence import OnVideoPageSequence
 from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequence
@@ -117,9 +112,9 @@ def setup_test_events():
 def test_watching_video_state(setup_test_events):
     test_user_id = setup_test_events
     sequence = WatchingVideoStateSequence(test_user_id, "video2")
-    assert sequence.videoEventsDf is not None
+    assert sequence.states_df is not None
     assert (
-        len(sequence.videoEventsDf) == 2
+        len(sequence.states_df) == 2
     )  # number of video watching states should be 2
 
 
@@ -128,7 +123,7 @@ def test_on_microblog_state(setup_test_events):
     test_user_id = setup_test_events
     sequence = OnMicroblogSequence(test_user_id, pd.DataFrame.from_dict(Event.events))
     assert sequence.states_df is not None
-    assert len(sequence.videoEventsDf) == 2  # 2 states should be created
+    assert len(sequence.states_df) == 2  # 2 states should be created
 
 
 # Test correct creation of an OnVideoPageStateSequence with correct number of states
@@ -136,4 +131,4 @@ def test_on_video_page_state(setup_test_events):
     test_user_id = setup_test_events
     sequence = OnVideoPageSequence(test_user_id, pd.DataFrame.from_dict(Event.events))
     assert sequence.states_df is not None
-    assert len(sequence.videoEventsDf) == 2  # 2 states should be created
+    assert len(sequence.states_df) == 2  # 2 states should be created
