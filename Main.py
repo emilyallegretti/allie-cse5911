@@ -248,11 +248,11 @@ def main():
         video_seq_df["startTime"] = pd.to_datetime(video_seq_df["startTime"])
         print(video_seq_df['endTime'])
         video_seq_df["endTime"] = pd.to_datetime(
-            video_seq_df["endTime"], format="%Y-%m-%d %H:%M:%S:%f"
+            video_seq_df["endTime"], format="%Y-%m-%d %H:%M:%S.%f"
         )
         on_mb_df["startTime"] = pd.to_datetime(on_mb_df["startTime"])
         on_mb_df["endTime"] = pd.to_datetime(
-            on_mb_df["endTime"], format="%Y-%m-%d %H:%M:%S:%f"
+            on_mb_df["endTime"], format="%Y-%m-%d %H:%M:%S.%f"
         )
         logged_in_df["startTime"] = pd.to_datetime(logged_in_df["startTime"])
         logged_in_df["endTime"] = pd.to_datetime(

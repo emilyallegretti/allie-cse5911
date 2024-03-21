@@ -1,134 +1,63 @@
 import pandas as pd
 import pytest
-from EventContainers.VideoWatchSequence import VideoWatchSequence
-from Events.Event import Event
-from StateContainers.OnMicroblogStateSequence import OnMicroblogSequence
-from StateContainers.OnVideoPageStateSequence import OnVideoPageSequence
-from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequence
+from datetime import datetime
+from States.State import State, subtract_millisecond
+from States.WatchingVideo import WatchingVideo
+from States.OnMicroblogPage import OnMicroblogPage
+from States.OnVideoPage import OnVideoPage
 
-
-@pytest.fixture(scope="module")
-def setup_test_events():
-    test_user_id = 1
-    Event.events = [
-        {
-            "kind": "PlayVideo",
-            "user_id": "2",
-            "timestamp": "2024-03-03 00:00:00",
-            "videoId": "video2",
-        },
-        {
-            "kind": "PauseVideo",
-            "user_id": "2",
-            "timestamp": "2024-03-03 01:00:00",
-            "videoId": "video2",
-        },
-        {
-            "kind": "PlayVideo",
-            "user_id": "2",
-            "timestamp": "2024-03-03 03:00:00",
-            "videoId": "video2",
-        },
-        {
-            "kind": "PlayVideo",
-            "user_id": "2",
-            "timestamp": "2024-03-03 04:00:00",
-            "videoId": "video2",
-        },
-        {
-            "kind": "PauseVideo",
-            "user_id": "2",
-            "timestamp": "2024-03-03 05:00:00",
-            "videoId": "video2",
-        },
-        {
-            "kind": "PageEntry",
-            "user_id": "2",
-            "timestamp": "2024-03-03 06:00:00",
-            "page": "Microblog_details",
-        },
-        {
-            "kind": "PageExit",
-            "user_id": "2",
-            "timestamp": "2024-03-03 07:00:00",
-            "page": "Microblog_details",
-        },
-        {
-            "kind": "PageEntry",
-            "user_id": "2",
-            "timestamp": "2024-03-03 08:00:00",
-            "page": "Microblog_details",
-        },
-        {
-            "kind": "PageEntry",
-            "user_id": "2",
-            "timestamp": "2024-03-03 08:01:00",
-            "page": "Microblog_details",
-        },
-        {
-            "kind": "PageExit",
-            "user_id": "2",
-            "timestamp": "2024-03-03 09:00:00",
-            "page": "Microblog_details",
-        },
-        {
-            "kind": "PageEntry",
-            "user_id": "2",
-            "timestamp": "2024-03-03 10:01:00",
-            "page": "Video",
-        },
-        {
-            "kind": "PageExit",
-            "user_id": "2",
-            "timestamp": "2024-03-03 10:02:00",
-            "page": "Video",
-        },
-        {
-            "kind": "PageEntry",
-            "user_id": "2",
-            "timestamp": "2024-03-03 11:01:00",
-            "page": "Video",
-        },
-        {
-            "kind": "PageEntry",
-            "user_id": "2",
-            "timestamp": "2024-03-03 11:02:00",
-            "page": "Video",
-        },
-        {
-            "kind": "PageExit",
-            "user_id": "2",
-            "timestamp": "2024-03-03 12:02:00",
-            "page": "Video",
-        },
+@pytest.fixture
+def test_events():
+    return [
+        {'user_id': '1', 'timestamp': '2023-03-03 00:00:00.000', 'kind': 'PageEntry', 'page': 'Home'},
+        {'user_id': '1', 'timestamp': '2023-03-03 00:05:00.000', 'kind': 'Logout', 'page': 'Logout Page'},
     ]
-    original_events = Event.events.copy()
-    yield test_user_id
-    # reset Event.events to original state
-    Event.events = original_events
 
+# Test subtract_millisecond utility function
+def test_subtract_millisecond():
+    timestamp = '2023-03-20 10:00:00.123000'
+    expected = '2023-03-20 10:00:00.122000'
+    assert subtract_millisecond(timestamp) == expected
 
-# # Test correct creation of a WatchingVideoStateSequence from list of test events
-# def test_watching_video_state(setup_test_events):
-#     test_user_id = setup_test_events
-#     sequence = WatchingVideoStateSequence(2, "video2")
-#     assert sequence.states_df is not None
-#     assert (
-#         len(sequence.states_df) == 2
-#     )  # number of video watching states should be 2
+# Test State.populateOrderedEvents static method
+def test_populateOrderedEvents(test_events):
+    ordered_events = State.populateOrderedEvents(test_events)
+    assert ordered_events == [
+        {'user_id': '1', 'kind': 'PageEntry', 'timestamp': '2023-03-03 00:00:00.000', 'page': 'Home'},
+        {'user_id': '1', 'kind': 'PageExit', 'timestamp': '2023-03-03 00:04:59.999000',  'page': 'Home'},
+        {'user_id': '1', 'kind': 'Logout', 'timestamp': '2023-03-03 00:05:00.000',  'page': 'Logout Page'}
+    ]
 
+# Test WatchingVideo from States
+def test_watching_video_state():
+    user_id, video_id = "2", "video2"
+    start_time = datetime.strptime("2024-03-03 00:00:00", "%Y-%m-%d %H:%M:%S")
+    end_time = datetime.strptime("2024-03-03 01:00:00", "%Y-%m-%d %H:%M:%S")
+    watching_video = WatchingVideo(user_id, video_id, start_time, end_time, kind="PlayVideo")
+    assert watching_video.user_id == user_id
+    assert watching_video.videoId == video_id
+    assert watching_video.startTime == start_time
+    assert watching_video.endTime == end_time
+    assert watching_video.kind == "PlayVideo"
 
-# # Test correct creation of an OnMicroblogStateSequence with correct number of states
-# def test_on_microblog_state(setup_test_events):
-#     test_user_id = setup_test_events
-#     sequence = OnMicroblogSequence(test_user_id, pd.DataFrame.from_dict(Event.events))
-#     assert sequence.states_df is not None
-#     assert len(sequence.states_df) == 2  # 2 states should be created
+# Test OnMicroblogPage from States
+def test_on_microblog_page_state():
+    user_id = "2"
+    start_time = datetime.strptime("2024-03-03 06:00:00", "%Y-%m-%d %H:%M:%S")
+    end_time = datetime.strptime("2024-03-03 07:00:00", "%Y-%m-%d %H:%M:%S")
+    on_microblog_page = OnMicroblogPage(user_id, start_time, end_time, kind="Microblog_details")
+    assert on_microblog_page.user_id == user_id
+    assert on_microblog_page.startTime == start_time
+    assert on_microblog_page.endTime == end_time
+    assert on_microblog_page.kind == "Microblog_details"
 
-
-# # Test correct creation of an OnVideoPageStateSequence with correct number of states
-# def test_on_video_page_state(setup_test_events):
-#     test_user_id = setup_test_events
-#     sequence = OnVideoPageSequence(test_user_id, pd.DataFrame.from_dict(Event.events))
-#     assert sequence.states_df is not None
-#     assert len(sequence.states_df) == 2  # 2 states should be created
+# Test OnVideoPage from States
+def test_on_video_page_state():
+    user_id = "2"
+    start_time = datetime.strptime("2024-03-03 10:01:00", "%Y-%m-%d %H:%M:%S")
+    end_time = datetime.strptime("2024-03-03 10:02:00", "%Y-%m-%d %H:%M:%S")
+    on_video_page = OnVideoPage(user_id, start_time, end_time, kind="PageEntry")
+    assert on_video_page.user_id == user_id
+    assert on_video_page.startTime == start_time
+    assert on_video_page.endTime == end_time
+    assert on_video_page.kind == "PageEntry"

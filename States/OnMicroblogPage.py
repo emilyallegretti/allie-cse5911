@@ -5,8 +5,3 @@ import pandas as pd
 class OnMicroblogPage(State):
     def __init__(self, userId, startTime, endTime,kind):
         super().__init__(userId, startTime, endTime,kind)
-        
-        
-
-
-

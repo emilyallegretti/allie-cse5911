@@ -25,7 +25,7 @@ def test_count_login_page_activities_per_day():
             '2024-03-19 10:00:00',
             '2024-03-20 11:00:00'
         ],
-        'activityType': ['Login Page', 'Home Page', 'Login Page', 'Login Page'],
+        'activityType': ['Login', 'Home Page', 'Login', 'Login'],
     }
     activities = pd.DataFrame(data)
     activities['timestamp'] = pd.to_datetime(activities['timestamp'])

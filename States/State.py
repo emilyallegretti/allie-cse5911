@@ -57,4 +57,4 @@ def subtract_millisecond(timestamp_str):
     modified_timestamp = original_timestamp -timedelta(milliseconds=1)
 
     # Return modified timestamp
-    return modified_timestamp.strftime("%Y-%m-%d %H:%M:%S:%f")
+    return modified_timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")
