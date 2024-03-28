@@ -22,7 +22,7 @@ from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequenc
 
 from EventContainers.MicroblogVisitsSequence import MicroblogVisitsSequence
 from States.State import State
-
+from EmojiIndicators import EmojiActivityTracker
 
 def main():
     db = Database(os.path.join("db", "FromEchoDev240208a_echo_main_db_current.sqlite3"))
@@ -167,6 +167,30 @@ def main():
         plt.legend()
         plt.title('Emoji Changes Over Time for User ' + str(userId))
         # plt.show()
+
+        tracker = EmojiActivityTracker(emojiDf)
+        # Calculate the indicators
+        frequency = tracker.get_frequency()
+        regularity = tracker.get_regularity()
+        emometer_scores = tracker.get_emometer_scores()
+        mindfulness = tracker.get_mindfulness()
+
+        # Display the results
+        results = [
+            ("Frequency", frequency),
+            ("Regularity (standard deviation)", regularity),
+            ("Emometer Intensity Baseline", emometer_scores.get('IntensityBaseline')),
+            ("Emometer Intensity Average", emometer_scores.get('IntensityAverage')),
+            ("Emometer Intensity StdDev", emometer_scores.get('IntensityStdDev')),
+            ("Emometer Emotion Baseline", emometer_scores.get('EmotionBaseline')),
+            ("Emometer Emotion Average", emometer_scores.get('EmotionAverage')),
+            ("Emometer Emotion StdDev", emometer_scores.get('EmotionStdDev')),
+            ("Mindfulness", mindfulness),
+        ]
+    
+        print(f"\nEmoji Activity Indicators for User {userId}:\n")
+        print(tabulate(results, headers=["Indicator", "Value"], tablefmt="github"))
+
 
         # show an example of a user's video watching sequence by plotting pauses/plays vs time
         userId = 74
