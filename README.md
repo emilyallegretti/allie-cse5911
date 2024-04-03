@@ -5,8 +5,7 @@ Note for future devs: you might want to copy this repo into your own GH account
 Instruction Ally ("Allie") is a data analysis system for the OSU MBCSR ECHO 1 Platform that reads, parses, and analyzes user interactions with the website, with an ultimate goal of providing personalized feedback to instructors and students based on active participation indicators found in the log data (see "Student Task Engagement Indicators" below). Allie reads in page event logs collected in ECHO's underlying SQLite database and classifies them in an object-oriented manner for easier processing. The ultimate goal of this system is to improve the MBCSR intervention experience by tracking whether or not students are actively interacting with the mental-health/wellness activities posted to the platform and if it is helping them improve. 
 
 ### ECHO - Student Task Engagement Indicators 
-ECHO records the user activity and provides the functionality to keep track of different indicators that measure different variables related to the task engagement. The following is a list of the indicators that aggregate the data of the multiple activities that are part of the intervention protocol, all of which are implemented by Allie:  
-
+ECHO records users' activity and provides the functionality for Allie to keep track of different indicators that measure different variables related to task engagement. The following is a list of the active participation indicators and representative variables for each activity in the MBCSR intervention protocol for which Allie measures and outputs analytics.
 
 | Activity | Indicator | Variable |
 |----------|-----------|----------|
@@ -32,6 +31,8 @@ ECHO records the user activity and provides the functionality to keep track of d
 
 
 ## File/Object Structure
+Allie's different layers of object-model hierarchies provide object-oriented tools for conducting the analyses of the participation indicators described above. The object models essentially encapsulate the raw event data taken from ECHO (`Events` below) and create more complex data structures (`States, EventContainers, StateContainers` below) that form connections and sequences between these events based on each indicator above. At Allie's current state, these objects are being used to display basic analyses of user participation with the ECHO platform based on specific users or durations of time. The goal of producing this simplistic object structure is that so when a future decision tree or machine-learning model is created, these objects can be used as input for simpler data processing. 
+
 Allie's directory structure consists of:
 - A folder containing regression tests (./Tests)
 - a db folder containing a recent copy of the ECHO database
