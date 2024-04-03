@@ -35,7 +35,7 @@ Allie's different layers of object-model hierarchies provide object-oriented too
 
 Allie's directory structure consists of:
 - A folder containing regression tests (./Tests)
-- a db folder containing a recent copy of the ECHO database
+- a db folder containing a recent copy of the ECHO database. A fallback of the current system is that an updated database needs to be manually uploaded to this folder to replace the older db version. In the future, possibly Allie could connect to the ECHO database directly to collect log data in real time so that training data is always up-to-date.
 - Component directories that contain class definitions of children/subcomponents of that directory
     - Events:
         - The first "layer" of Allie. Events are objects representing the various types of page interaction logs that are collected by ECHO, all inheriting from parent abstract class Event. Events can be sorted into Pandas dataframes and further filtered based on user id, etc.
@@ -63,7 +63,7 @@ Allie is still a work in progress. There are more objectives for the system impl
   
 The following objectives have yet to be implemented:
 - (Objective 1)
-  *Pattern Learning Model*: Develop a system for data analytics (called “Allie”) and student activity tracking, that analyzes user interactions with the ECHO platform by querying the backend database for page event logs. Using student log data, the system detects patterns in page interactions, and sends personalized reports to users and instructors based on their activity, while ensuring data privacy.
+  *Pattern Learning Model*: Using the foundational object model, the system detects patterns in user page interactions and forms decisions or suggestions based on the pattern extracted from the input data.
 - (Objective 4)
 *Personalized Reporting*: Use patterns detected in an individual student’s platform interaction data to send personalized reports/messages to them based on their activity/behaviors. Send these same reports to the student's instructor to keep the instructor updated on students’ progress, and determine possible suggested actions for Echo to take.
 
