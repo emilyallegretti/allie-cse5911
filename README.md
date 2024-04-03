@@ -5,7 +5,7 @@ Note for future devs: you might want to copy this repo into your own GH account
 Instruction Ally ("Allie") is a data analysis system for the OSU MBCSR ECHO 1 Platform that reads, parses, and analyzes user interactions with the website, with an ultimate goal of providing personalized feedback to instructors and students based on active participation indicators found in the log data (see "Student Task Engagement Indicators" below). Allie reads in page event logs collected in ECHO's underlying SQLite database and classifies them in an object-oriented manner for easier processing. The ultimate goal of this system is to improve the MBCSR intervention experience by tracking whether or not students are actively interacting with the mental-health/wellness activities posted to the platform and if it is helping them improve. 
 
 ### ECHO - Student Task Engagement Indicators 
-ECHO records users' activity and provides the functionality for Allie to keep track of different indicators that measure different variables related to task engagement. The following is a list of the active participation indicators and representative variables for each activity in the MBCSR intervention protocol for which Allie measures and outputs analytics.
+ECHO records users' activity and provides the functionality for Allie to keep track of different indicators that measure different variables related to task engagement. The following is a list of the active participation indicators and representative variables for each activity in the MBCSR intervention protocol for which Allie measures and outputs analytics. (Table by Leon Madrid)
 
 | Activity | Indicator | Variable |
 |----------|-----------|----------|
