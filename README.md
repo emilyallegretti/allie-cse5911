@@ -1,5 +1,5 @@
 # allie-cse5911
-Repository link: https://github.com/emilyallegretti/allie-cse5911
+Repository link: https://github.com/emilyallegretti/allie-cse5911  
 Note for future devs: you might want to copy this repo into your own GH account
 ## About 
 Instruction Ally ("Allie") is a data analysis system for the OSU MBCSR ECHO 1 Platform that reads, parses, and analyzes user interactions with the website, with an ultimate goal of providing personalized feedback to instructors and students based on active participation indicators found in the log data (see "Student Task Engagement Indicators" below). Allie reads in page event logs collected in ECHO's underlying SQLite database and classifies them in an object-oriented manner for easier processing. The ultimate goal of this system is to improve the MBCSR intervention experience by tracking whether or not students are actively interacting with the mental-health/wellness activities posted to the platform and if it is helping them improve. 
@@ -40,19 +40,31 @@ Allie's directory structure consists of:
     - Events:
         - The first "layer" of Allie. Events are objects representing the various types of page interaction logs that are collected by ECHO, all inheriting from parent abstract class Event. Events can be sorted into Pandas dataframes and further filtered based on user id, etc.
     - EventContainers:
-        - DataFrame representation of a chronological sequence of Event objects filtered for a specific user and action (i.e. VideoWatchSequence encapsulates a sequence of video pause/play events for a specific   user and video).
+        - DataFrame representation of a chronological sequence of Event objects filtered for a specific user and action/indicator (i.e. an instance of VideoWatchSequence encapsulates a sequence of video pause/play events for a specific user and video. An instance of MicroblogVisitsSequence encapsulates a sequence of visits to the Microblogs page for a specific user id).
     - Posts:
-         - Posts include Announcemnets, Comments, and Microblog classes. They represent the 'noun' items on the platform and are not exactly actions/events.
-    - StateContainers:
-         - DataFrame representation of a chronological sequence of State objects filtered for a specific user and action (i.e. WatchingVideoStateContainer).
+         - Posts include Announcements, Comments, and Microblog classes. They represent the 'noun' items on the platform and are not exactly actions/events. They are simply 'posts' that users/instructors make to the platform.
     - States:
         - Object representation of a duration of time in which specific Events are taking place, for example the state of watching a video, or more generally being logged into the system. All inherit from parent abstract class State. Contain a startTime and endTime as attributes.
+    - StateContainers:
+         - DataFrame representation of a chronological sequence of State objects filtered for a specific user and action/indicator (i.e. an instance of WatchingVideoStateContainer contains all the States in which a specific user is watching a specific video).
 - Misc. files
   - Main.py:
       - Initially parses ECHO database tables into the Event object model.
-      - After that, it's a script of (essentially) test code that displays analytical output of each active participation indicator (see by creating instances of all data classes in each 'layer' of Allie and calling their functions.  
+      - After that, it's a script of (essentially) test code that displays analytical output of each active participation indicator (see by creating instances of all data classes in each 'layer' of Allie and calling their functions.
+  - EventFactory.py:
+  - SqliteUtils.py:
 
 ## Prerequisites/How to Use
 See UserManual.txt
 ## Info For Future Developers
-See InfoForFutureDevelopers.txt
+Allie is still a work in progress. There are more objectives for the system implementation to be implemented by future developer groups (See our Project Abstract and Release Plan for more details). The following objectives from our Project Abstract have been successfully implemented and tested by the current dev team:   
+- (Objective 2) *Real-Time Logging*: The system will query the app’s database tables to collect a real-time event stream of users’ interactions with the platform, such as amount of time spent watching videos, page clicks, microblog comments, emoji board participation, and compliance with assignments.  
+- (Objective 3) *Data Analysis*: Process the data and extract high-level patterns and trends in student activity and behavior. (Meaning, the entire indicator table provided above has been implemented into Allie's analytics). 
+  
+The following objectives have yet to be implemented:
+- (Objective 1)
+  *Pattern Learning Model*: Develop a system for data analytics (called “Allie”) and student activity tracking, that analyzes user interactions with the ECHO platform by querying the backend database for page event logs. Using student log data, the system detects patterns in page interactions, and sends personalized reports to users and instructors based on their activity, while ensuring data privacy.
+- (Objective 4)
+*Personalized Reporting*: Use patterns detected in an individual student’s platform interaction data to send personalized reports/messages to them based on their activity/behaviors. Send these same reports to the student's instructor to keep the instructor updated on students’ progress, and determine possible suggested actions for Echo to take.
+
+See InfoForFutureDevelopers.txt for more details.
