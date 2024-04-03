@@ -38,7 +38,7 @@ Allie's directory structure consists of:
 - a db folder containing a recent copy of the ECHO database. A fallback of the current system is that an updated database needs to be manually uploaded to this folder to replace the older db version. In the future, possibly Allie could connect to the ECHO database directly to collect log data in real time so that training data is always up-to-date.
 - Component directories that contain class definitions of children/subcomponents of that directory
     - Events:
-        - The first "layer" of Allie. Events are objects representing the various types of page interaction logs that are collected by ECHO, all inheriting from parent abstract class Event. Events can be sorted into Pandas dataframes and further filtered based on user id, etc.
+        - The first "layer" of Allie. Events are objects representing the various types of page interaction logs that are collected by ECHO's database--entering pages, playing a video, clicking on slides, etc.--, all inheriting from parent abstract class Event. Each Event subclass contains attributes from the database that characterize it--timestamp, necessary video or slide IDs when applicable, associated user id, etc. Events can be sorted into Pandas dataframes and further filtered based on user id, etc.
     - EventContainers:
         - DataFrame representation of a chronological sequence of Event objects filtered for a specific user and action/indicator (i.e. an instance of VideoWatchSequence encapsulates a sequence of video pause/play events for a specific user and video. An instance of MicroblogVisitsSequence encapsulates a sequence of visits to the Microblogs page for a specific user id).
     - Posts:
@@ -50,7 +50,7 @@ Allie's directory structure consists of:
 - Misc. files
   - Main.py:
       - Initially parses ECHO database tables into the Event object model.
-      - After that, it's a script of (essentially) test code that displays analytical output of each active participation indicator (see by creating instances of all data classes in each 'layer' of Allie and calling their functions.
+      - After that, it's a script of (essentially) test code that uses the Events parsed in to create EventContainers, States, and StateContainers, to display analytical output of each active participation indicator by creating instances of all data classes in each 'layer' of Allie and calling their functions.
   - EventFactory.py:
   - SqliteUtils.py:
 
