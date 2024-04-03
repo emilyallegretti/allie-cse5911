@@ -1,0 +1,47 @@
+﻿Software Requirements
+To run this application, you will need:
+
+
+Python 3.8 or newer
+
+
+Necessary Imports
+The application relies on several Python libraries. 
+Ensure you have the following libraries installed:
+
+
+pandas
+numpy
+matplotlib
+tabulate
+You can install these libraries using pip, Python's package installer. Run the following command in your terminal or command prompt:
+
+
+pip install pandas numpy matplotlib tabulate
+
+
+Accessing the Database
+The application reads data from a SQLite database. Ensure you have the database file accessible and located in the correct directory in a db folder relative to your main script.
+
+
+Database File: FromEchoDev240208a_echo_main_db_current.sqlite3 .
+Running the Application
+To run the application, follow these steps:
+
+
+Open Terminal/Command Prompt: Navigate to the directory containing your Python application files.
+
+
+Run the Main Script:
+python3 Main.py
+Replace Main.py with the actual name of your main script file if different.
+
+
+Viewing the Results
+Once the application is running:
+
+
+Console Outputs: The application prints results directly to the console, including data frames and analysis summaries.
+
+
+Graphs and Visualizations: Graphs will be displayed in separate windows if the script includes plotting commands. Ensure your graphical interface is configured to display these windows.
