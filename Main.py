@@ -22,7 +22,7 @@ from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequenc
 
 from EventContainers.MicroblogVisitsSequence import MicroblogVisitsSequence
 from States.State import State
-from EmojiIndicators import EmojiActivityTracker
+from EmojiIndicators import EmojiIndicators
 
 def main():
     db = Database(os.path.join("db", "FromEchoDev240208a_echo_main_db_current.sqlite3"))
@@ -168,7 +168,7 @@ def main():
         plt.title('Emoji Changes Over Time for User ' + str(userId))
         # plt.show()
 
-        tracker = EmojiActivityTracker(emojiDf)
+        tracker = EmojiIndicators(emojiDf)
         # Calculate the indicators
         frequency = tracker.get_frequency()
         regularity = tracker.get_regularity()

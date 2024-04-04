@@ -1,8 +1,11 @@
 import pandas as pd
-import numpy as np
 
-class EmojiActivityTracker:
+# This class describes the student engagement for emoji activities 
+# by measuring indicators like frequency, regularity, emometer, mindfulness, and their variables.
+
+class EmojiIndicators:
     def __init__(self, emoji_events_df):
+        # initialize the EmojiIndicators instance with emoji event data
         self.emoji_events_df = emoji_events_df
 
     def get_frequency(self):
