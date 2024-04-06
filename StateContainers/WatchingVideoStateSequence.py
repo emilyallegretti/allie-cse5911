@@ -18,6 +18,31 @@ class WatchingVideoStateSequence:
         # convert _states to a dataframe of State objects
         self.states_df = pd.DataFrame.from_dict(self._states)
 
+    # for Frequency indicator: counts the amount of video watching states there are in this states_df instance
+    def countVideoFrequency(self):
+        if self.states_df:
+            return len(self.states_df)
+        else:
+            return 0
+    # for video watching time indicator: accumulate total time spent watching this video by adding up time durations in this df
+    #TODO: in future, this information could be used to track if the user has completed this video by comparing the total
+    # watch time with the length of the video. However, at the current state of the database we do not know the length of the video. 
+    def countTotalWatchTime(self):
+        if self.states_df:
+            df = self.states_df
+             # Convert string timestamps to datetime objects
+            df['startTime'] = pd.to_datetime(df['startTime'])
+            df['endTime'] = pd.to_datetime(df['endTime'])
+            
+            # Calculate duration for each row
+            df['duration'] = df['endTime'] - df['startTime']
+            
+            # Calculate total duration
+            total_duration = df['duration'].sum()
+            
+            return total_duration
+
+
 #TODO: account for case where user plays a video and then moves to new page without pausing the video first, or else this method wont catch it
 # or what if the video completes (the user has watched the whole thing)? Is that logged as a pause, will the database account for that?
     def _getStates(self, video_df: pd.DataFrame):

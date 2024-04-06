@@ -8,6 +8,16 @@ import os
 
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import plotly.express as px
+import plotly.graph_objs as go
+import pandas as pd
+
+
+from EventContainers.EmojiSelectSequence import EmojiSelectSequence
+from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
@@ -242,12 +252,20 @@ def main():
     db.connect()
     user_id = 1
 
-    try:
+    try: 
+        ### PARSING EVENT LOG DATA FROM ECHO DATABASE
+
         # read in event objects
         event_query = "SELECT * FROM EchoApp_videoactivity"
         results = query_database(db, event_query)
         create_event_objects(results)
 
+        for row in results:
+            event = create_event_object(row)
+            if event: 
+                Event.add(event)
+            else:
+                print("Invalid event")
         # read in announcements, comments, microblog objects
         ann_query = "SELECT * from EchoApp_announcement"
         results = query_database(db, ann_query)
@@ -309,11 +327,56 @@ def main():
             show_emoji_activity_indicators(emoji_df, user_id)
             print()
 
-        # show a user's video watch events for a given video
+        # Get all comments for a specific microblog
+        specific_microblog_id = 6  # replace with the actual microblog_id you want to query
+        comments = Comment.get_comments_for_microblog(specific_microblog_id)
+
+        comments_df = pd.DataFrame(comments)
+
+        print(comments_df)
+        print("-" * 144)
+
+        # Get all comments for a specific author
+        author_id = 30
+        authors_comments = Comment.get_comments_by_author(author_id)
+
+        # Convert the list of comments to a DataFrame for better tabular representation
+        authors_df = pd.DataFrame(authors_comments)
+
+        # Display the DataFrame
+        print(authors_df)
+
+        # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
+        userId = 75
+        emojiDf = EmojiSelectSequence(userId).emojiEventsDf
+        # convert to datetime format
+        emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp'])
+        # plot score vs time
+        print("\n******** Examples of Emoji Select Events *********")
+        # plt.figure(figsize=(8, 5))
+        # plt.plot(emojiDf['timestamp'], emojiDf['IntensityScore'], label='Intensity', marker='o', linestyle='solid')
+        # plt.plot(emojiDf['timestamp'], emojiDf['EmotionScore'], label='Emotion', marker='x', linestyle='dashed')
+        # plt.xlabel('Time')
+        # plt.ylabel('Score')
+        # plt.legend()
+        # plt.title('Emoji Changes Over Time for User ' + str(userId))
+        # plt.show()
+
+        # show an example of a user's video watching sequence by plotting pauses/plays vs time
+        userId = 74
         videoId = 'video2'
-        video_df = create_video_dataframe_for_user(user_id, videoId)
-        # plot
-        plot_video_watch_sequence(video_df, user_id, videoId)
+        videoDf = VideoWatchSequence(userId, videoId).videoEventsDf
+        # get only time out of timestamp
+        videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:])
+        # plot action vs time
+        videoDf["time_only"] = videoDf["timestamp"]
+        x = videoDf["time_only"]
+        y = videoDf["kind"]
+        # plt.scatter(x,y)
+        # plt.xlabel('Time')
+        # plt.ylabel('Action')
+        # plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
+        # plt.show()
 
 
         # Show State objects
@@ -411,6 +474,7 @@ def main():
         # title_font = {'family': 'serif', 'color': 'blue', 'weight': 'bold', 'size': 16}
         # axis_label_font = {'family': 'sans-serif', 'color': 'green', 'weight': 'normal', 'size': 12}
         # tick_label_font = {'family': 'monospace', 'color': 'red', 'weight': 'normal', 'size': 10}   
+        # tick_label_font = {'family': 'monospace', 'color': 'red', 'weight': 'normal', 'size': 10}
         # ax.set_xlabel('Timestamp', fontdict=axis_label_font)
         # ax.set_ylabel('Kind of Interaction', fontdict=axis_label_font)
         # ax.set_title('Timeline of Interactions for User 76', fontdict=title_font)
@@ -430,11 +494,151 @@ def main():
         #     Number of Microblog posts made by this author: {}
         #     Average Length of Microblog Posts In Characters: {}
         #     Avg Amount of Logins Per Day: {}       
+        #     Avg Amount of Logins Per Day: {}
         # """.format(mb_count, avg_len, avg_logins)
         # ax.text(0.3, 0.5, text_content, transform=ax.transAxes,
         # fontsize=12, ha='center', va='center')
 
-        # plt.show()
+        # Initialize the Dash app
+        app = dash.Dash(__name__)
+
+        # Define the layout of the Dash app
+        # Define the layout of the Dash app
+        app.layout = html.Div([
+            dcc.Dropdown(
+                id='user-dropdown',
+                options=[{'label': str(user_id), 'value': user_id} for user_id in events_df['user_id'].unique()],
+                value=events_df['user_id'].unique()[0],  # Default value is the first user ID
+                clearable=False
+            ),
+            dcc.Dropdown(
+                id='timeframe-dropdown',
+                options=[
+                    {'label': 'From Start Date', 'value': 'from_start'},
+                    {'label': 'Last 7 Days', 'value': 'last_7_days'},
+                    {'label': 'Last Login Session', 'value': 'last_login_session'}
+                ],
+                value='from_start',  # Default value is 'From Start Date'
+                clearable=False
+            ),
+            dcc.Graph(id='combined-plot')
+        ])
+
+        # Define callback to update the plot based on selected user ID and time frame
+        @app.callback(
+            Output('combined-plot', 'figure'),
+            [Input('user-dropdown', 'value'),
+            Input('timeframe-dropdown', 'value')]
+        )
+        def update_combined_plot(selected_user_id, selected_timeframe):
+            # Fetch data based on selected user ID and time frame
+
+            # Fetch new data for the selected user ID
+            microblog_state_seq = OnMicroblogSequence(page_exit_df, selected_user_id)
+            print("states of being on microblog for user selected_user_id")
+            on_mb_df = microblog_state_seq.states_df
+            print(on_mb_df)
+
+            # On video page-- state sequence
+            on_video_seq = OnVideoPageSequence(page_exit_df, selected_user_id)
+            print("states of being on videos page for user selected_user_id")
+            video_seq_df=on_video_seq.states_df
+            print(video_seq_df)
+
+            # Watching video -- state sequence
+            watching_video_states = WatchingVideoStateSequence(selected_user_id, 'video1')
+            print('states of watching video1 for user selected_user_id')
+            watching_df = watching_video_states.states_df
+            print(watching_video_states.states_df)
+            # Logged In -- state sequnece
+            logged_in_states = LoggedInSequence(page_exit_df, selected_user_id)
+            print("states of being logged in for user selected_user_id")
+            logged_in_df = logged_in_states.states_df
+            print(logged_in_df)
+
+            # convert timestamp columns to datetime format
+            watching_df["startTime"] = pd.to_datetime(watching_df["startTime"])
+            watching_df['endTime'] = pd.to_datetime(watching_df['endTime'])
+            video_seq_df["startTime"] = pd.to_datetime(video_seq_df["startTime"])
+            print(video_seq_df['endTime'])
+            video_seq_df["endTime"] = pd.to_datetime(
+                video_seq_df["endTime"], format="%Y-%m-%d %H:%M:%S:%f"
+            )
+            on_mb_df["startTime"] = pd.to_datetime(on_mb_df["startTime"])
+            on_mb_df["endTime"] = pd.to_datetime(
+                on_mb_df["endTime"], format="%Y-%m-%d %H:%M:%S:%f"
+            )
+            logged_in_df["startTime"] = pd.to_datetime(logged_in_df["startTime"])
+            logged_in_df["endTime"] = pd.to_datetime(
+                logged_in_df["endTime"], format="mixed"
+            )
+            # authors_comments = Comment.get_comments_by_author(selected_user_id)
+            # # Convert the list of comments to a DataFrame for better tabular representation
+            # authors_df = pd.DataFrame(authors_comments)
+            # authors_df["createdDate"] = pd.to_datetime(authors_df["createdDate"], format="mixed")
+            # authors_df["updatedDate"] = pd.to_datetime(authors_df["updatedDate"], format="mixed")
+
+            # Now filter these dataframes based on the time frame selected
+            # if selected_timeframe == "from_start":
+            #     # Fetch all data from the start date
+            #     #data_df = fetch_data_from_start(selected_user_id)
+            # elif selected_timeframe == "last_7_days":
+            #     # Fetch data for the last 7 days
+            #    # data_df = fetch_data_last_7_days(selected_user_id)
+            # elif selected_timeframe == "last_login_session":
+            #     # Fetch data for the last login session
+            #    # data_df = fetch_data_last_login_session(selected_user_id)
+            # else:
+            #     # Default to fetching all data from the start date
+            #     #data_df = fetch_data_from_start(selected_user_id)
+
+            fig = go.Figure()
+
+            # Plot each dataset from different dataframes
+            for _, row in watching_df.iterrows():
+                fig.add_trace(go.Scatter(x=[row["startTime"], row["endTime"]],
+                                        y=[row["kind"], row["kind"]],
+                                        mode='lines+markers', line=dict(color='purple',width=2), name='Watching'))
+
+            for _, row in video_seq_df.iterrows():
+                fig.add_trace(go.Scatter(x=[row["startTime"], row["endTime"]],
+                                        y=[row["kind"], row["kind"]],
+                                        mode='lines+markers', line=dict(color='red',width=2), name='Video Sequence'))
+
+            for _, row in microblog_state_seq.states_df.iterrows():
+                fig.add_trace(go.Scatter(x=[row["startTime"], row["endTime"]],
+                                        y=[row["kind"], row["kind"]],
+                                        mode='lines+markers', line=dict(color='blue'), name='Microblog State'))
+
+            for _, row in on_mb_df.iterrows():
+                fig.add_trace(go.Scatter(x=[row["startTime"], row["endTime"]],
+                                        y=[row["kind"], row["kind"]],
+                                        mode='lines+markers', line=dict(color='blue'), name='On Microblog'))
+
+            for _, row in logged_in_df.iterrows():
+                fig.add_trace(go.Scatter(x=[row["startTime"], row["endTime"]],
+                                        y=[row["kind"], row["kind"]],
+                                        mode='lines+markers', line=dict(color='blue'), name='Logged In'))
+
+            # microblog comment instances
+            fig.add_trace(go.Scatter(x=authors_df['createdDate'], y=['PostedOnMicroblog'],
+                                    mode='markers', marker=dict(color='black'), name='Posted On Microblog'))
+
+            fig.add_trace(go.Scatter(x=authors_df["updatedDate"], y=["UpdatedMicrblogComment"],
+                                    mode='markers', marker=dict(color='black'), name='Updated Microblog Comment'))
+            
+            # add annotations for analytics
+
+            # Update layout
+            fig.update_layout(title='Combined Plot',
+                            xaxis_title='Time',
+                            yaxis_title='Kind')
+
+            return fig
+
+        # Run the Dash app
+        if __name__ == '__main__':
+            app.run_server(debug=True)
 
 
 

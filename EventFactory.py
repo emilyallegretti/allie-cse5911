@@ -38,7 +38,6 @@ def create_event_object(row):
             return PauseVideo(metadata, row['video_id'])
         elif row['action'] == 'play':
             return PlayVideo(metadata, row['video_id'])
-        # todo : more elifs for page entry objects for each type of page?
         else:
             return PageEntry(metadata,row['page'])
     elif event_type == 'emoji_select':

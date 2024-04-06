@@ -2,7 +2,7 @@ from abc import ABC
 
 # superclass for all Events.
 # metadata should be a key-value dictionary object containing metadata attributes common to all events:
-# metadata = {id , timestamp, username, userid, page, action}
+# metadata = {id , timestamp}
 # Event acts as an abstract class that shouldn't be instantiated directly
 class Event(ABC):
     # keep a static list of all Event objects created, stored as a list of dictionaries
