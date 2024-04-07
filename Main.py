@@ -6,151 +6,176 @@ import seaborn as sns
 from tabulate import tabulate
 import os
 
-from EventContainers.EmojiSelectSequence import EmojiSelectSequence
-from EventContainers.VideoWatchSequence import VideoWatchSequence
+from SqliteUtils import Database
+from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
 from Events.Event import Event
-from EventContainers.UserActivity import UserActivity, calculate_time_spent_per_day, count_login_page_activities_per_day
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
 from Posts.Microblog import Microblog
-from SqliteUtils import Database
-from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
+from EventContainers.EmojiSelectSequence import EmojiSelectSequence
+from EventContainers.VideoWatchSequence import VideoWatchSequence
+from EventContainers.UserActivity import UserActivity, calculate_time_spent_per_day, count_login_page_activities_per_day
+from States.State import State
 from StateContainers.LoggedInStateSequence import LoggedInSequence
 from StateContainers.OnMicroblogStateSequence import OnMicroblogSequence
 from StateContainers.OnVideoPageStateSequence import OnVideoPageSequence
 from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequence
-
 from EventContainers.MicroblogVisitsSequence import MicroblogVisitsSequence
-from States.State import State
 from EmojiIndicators import EmojiIndicators
 
+# execute a given query and return the results
+def query_database(db, query):
+    return db.run_query(query)
+
+# create and add event objects from query results
+def create_event_objects(results):
+    for row in results:
+        event = create_event_object(row)
+        if event: 
+            Event.add(event)
+        else:
+            print("Invalid event")
+
+# create and add post objects (Announcements, Comments, Microblogs) from query results
+def create_post_objects(results, post_type):
+    for row in results:
+        if post_type == 'announcement':
+            post = create_announcement(row)
+            if post:
+                Announcement.add(post)
+        elif post_type == 'comment':
+            post = create_comment(row)
+            if post:
+                Comment.add(post)
+        elif post_type == 'microblog':
+            post = create_microblog(row)
+            if post:
+                Microblog.add(post)
+
+# create a dataframe from query results from database
+def create_events_dataframe(events, output_file_name):
+    events_df = pd.DataFrame.from_dict(events)
+    events_df.to_csv(f"{output_file_name}.csv", index=False)
+    return events_df
+
+# create a dataframe of synthetic Page Exits
+def create_page_exits_dataframe(events):
+    page_exit_list = State.populateOrderedEvents(events)
+    page_exit_df = pd.DataFrame.from_dict(page_exit_list)
+    page_exit_df.to_csv("page_exit_df.csv", index=False)
+    return page_exit_df
+
+# filter activities by user_id from a given events dataframe
+def filter_activities_by_user(events_df, user_id):
+    return events_df[events_df['user_id'] == user_id]
+
+# filter login events for a given user from a given events dataframe
+def filter_login_events(events_df, user_id):
+    return events_df[(events_df['user_id'] == user_id) & (events_df['kind'] == 'Login')].sort_values('timestamp')
+
+# show all activities for a given user
+def show_user_activities(user_activities, user_id):
+    df_activities = pd.DataFrame([vars(a) for a in user_activities])
+    df_activities['timestamp'] = pd.to_datetime(df_activities['timestamp'])
+    df_activities['date'] = df_activities['timestamp'].dt.date
+    df_activities['time'] = df_activities['timestamp'].dt.time
+    user_activities_df = filter_activities_by_user(df_activities, user_id)
+    grouped_activities = user_activities_df.groupby('date')
+    # representation for each day
+    print(f"Activities for user {user_id}:")
+    for date, group in grouped_activities:
+        print(f"Date: {date}")
+        print(tabulate(group[['user_id', 'time', 'activityType', 'page' ]], headers='keys', tablefmt='pretty'))
+        print("\n")  
+    user_activities_df = user_activities_df.sort_values('timestamp')
+
+# print the total time spent per day by a given user
+def print_time_spent_per_day(user_activities, user_id):
+    df_activities = pd.DataFrame([vars(a) for a in user_activities])
+    df_time_spent = calculate_time_spent_per_day(df_activities, user_id)
+    print(f"Total time spent per day by user {user_id}:")
+    print(tabulate(df_time_spent, headers='keys', tablefmt='pretty'))
+
+# print login count per day for a given user
+def print_login_count_per_day(user_activities, user_id):
+    df_activities = pd.DataFrame([vars(a) for a in user_activities])
+    login_count_per_user_day = count_login_page_activities_per_day(df_activities, user_id)
+    if not login_count_per_user_day.empty:
+        print(f"Number of 'Login Page' activities per day for user {user_id}:")
+        print(tabulate(login_count_per_user_day, headers='keys', tablefmt='pretty'))
+    else:
+        print(f"No 'Login Page' activities found for user {user_id}.")
+
+# show all comments for a given microblog
+def show_comments_for_microblog(microblog_id):
+    # create a dataframe for all comments of a given microblog
+    microblog_comments = Comment.get_comments_for_microblog(microblog_id)
+    comments_for_microblog_df = create_events_dataframe(microblog_comments, "comments_for_microblog" + str(microblog_id))
+
+# show all comments made by a given author
+def show_comments_for_author(author_id):
+    author_comments = Comment.get_comments_by_author(author_id)
+    comments_for_author_df = create_events_dataframe(author_comments, "comments for author" + str(author_id))
+
+
+# main function
 def main():
     db = Database(os.path.join("db", "FromEchoDev240208a_echo_main_db_current.sqlite3"))
     db.connect()
-
-    try:        
+    try:
         # read in event objects
-        videoactivity_query = "SELECT * FROM EchoApp_videoactivity"
-        results = db.run_query(videoactivity_query)
+        event_query = "SELECT * FROM EchoApp_videoactivity"
+        results = query_database(db, event_query)
+        create_event_objects(results)
 
-        for row in results:
-            event = create_event_object(row)
-            if event: 
-                Event.add(event)
-            else:
-                print("Invalid event")
-        # print(Event.events)
         # read in announcements, comments, microblog objects
-        ann_query="SELECT * from EchoApp_announcement"
-        results=db.run_query(ann_query)
-        for row in results:
-            print(row['ann_body'])
-            ann = create_announcement(row)
-            if ann:
-                Announcement.add(ann)
-        # print(Announcement.announcements)
-
+        ann_query = "SELECT * from EchoApp_announcement"
+        results = query_database(db, ann_query)
+        create_post_objects(results, 'announcement')
         comm_query="SELECT * from EchoApp_comment"
-        results = db.run_query(comm_query)
-        for row in results:
-            comm = create_comment(row)
-            if comm:
-                Comment.add(comm)
-
+        results = query_database(db, comm_query)
+        create_post_objects(results, 'comment')
         microblog_query="SELECT * from EchoApp_microblog"
-        results = db.run_query(microblog_query)
-        for row in results:
-            microblog = create_microblog(row)
-            if microblog:
-                Microblog.add(microblog)
-        # print(Microblog.microblogs)
+        results = query_database(db, microblog_query)
+        create_post_objects(results, 'microblog')
 
-        user_activity_query = "SELECT * FROM EchoApp_videoactivity"
-        results = db.run_query(user_activity_query)
+        # read in user activity objects
+        activity_results = query_database(db, event_query)
         user_activities = []
-        for row in results:
+        for row in activity_results:
             activity = UserActivity.create_user_activity(row)
             user_activities.append(activity)
+        
+        # create a df for all users' activities based on videoactivities
+        events_df = create_events_dataframe(Event.events, "events_df")
 
-        # create a dataframe for videoactivities
-        events_df = pd.DataFrame.from_dict(Event.events)
-        events_df.to_csv("output.csv")
-        # pretty print
-        print ('all events:')
-        print(events_df)
         # create updated df of events with synthetic Page Exits
-        page_exit_list = State.populateOrderedEvents(Event.events)
-        print("List of events with page exits:")
-        print(page_exit_list)
-        page_exit_df = pd.DataFrame.from_dict(page_exit_list)
-        print(page_exit_df)
+        page_exit_df = create_page_exits_dataframe(Event.events)
 
-        # Example of time sequence of a user's login events
-        print("************ Examples of Login Events ************")
-        user_logins = events_df[(events_df['user_id'] == 75) & (events_df['kind']=='Login')]
-        print("Emily's Login Events:")
-        print(user_logins[["user_id", "kind", "timestamp"]])
+        # =====examples for a user=====
+        user_id = 75
 
-        user_logins = events_df[(events_df['user_id'] == 76) & (events_df['kind'] == 'Login')].sort_values('timestamp')
-        print("Crystal's Login Events:")
-        print(user_logins[['user_id', 'kind', 'timestamp']])
-        print("**************************************************")
+        # show a user's login events
+        user_logins_df = filter_login_events(events_df, user_id)
+        print(f"Login events for user {user_id}:")
+        print(user_logins_df[['user_id', 'kind', 'timestamp']])
 
-        df_activities = pd.DataFrame([vars(a) for a in user_activities])
-        print(df_activities)
-        df_activities['timestamp'] = pd.to_datetime(df_activities['timestamp'])
-        df_activities['date'] = df_activities['timestamp'].dt.date
-        df_activities['time'] = df_activities['timestamp'].dt.time
+        # show a user's all activities
+        show_user_activities(user_activities, user_id)
+        # analyze a user's all activities by day
+        print_time_spent_per_day(user_activities, user_id)
+        print_login_count_per_day(user_activities, user_id)
 
-        user_id = 62
-        user_activities_df = df_activities[df_activities['user_id'] == user_id]
-
-        grouped_activities = user_activities_df.groupby('date')
-
-        print("Abdi's Login Events:")
-
-        # representation for each day
-        for date, group in grouped_activities:
-            print(f"Activities for {date}:")
-            print(tabulate(group[['user_id', 'time', 'activityType', 'page' ]], headers='keys', tablefmt='pretty'))
-            print("\n")  
-
-        user_activities_df = user_activities_df.sort_values('timestamp')
-
-        # printing time spent per day
-        df_activities = pd.DataFrame([vars(a) for a in user_activities])
-        df_time_spent = calculate_time_spent_per_day(df_activities, user_id)
-
-        print(f"\nTotal time spent per day by user {user_id}:")
-        print(tabulate(df_time_spent, headers='keys', tablefmt='pretty'))
-
-        # printing login count per day
-        login_count_per_user_day = count_login_page_activities_per_day(user_activities, user_id)
-
-        if not login_count_per_user_day.empty:
-            print(f"Number of 'Login Page' activities per day for user {user_id}:")
-            print(tabulate(login_count_per_user_day, headers='keys', tablefmt='pretty'))
-        else:
-            print(f"No 'Login Page' activities found for user {user_id}.")
-
-        # Get all comments for a specific microblog
-        specific_microblog_id = 6  # replace with the actual microblog_id you want to query
-        comments = Comment.get_comments_for_microblog(specific_microblog_id)
-
-        comments_df = pd.DataFrame(comments)
-
-        print(comments_df)
-        print("-" * 144)
-
-        # Get all comments for a specific author
+        # show all comments for a given microblog
+        microblog_id = 6
+        show_comments_for_microblog(microblog_id)
+        # show all comments for a given author
         author_id = 30
-        authors_comments = Comment.get_comments_by_author(author_id)
+        show_comments_for_author(author_id)
 
-        # Convert the list of comments to a DataFrame for better tabular representation
-        authors_df = pd.DataFrame(authors_comments)
 
-        # Display the DataFrame
-        print(authors_df)
+
+
 
         # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
         userId = 75
