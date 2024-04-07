@@ -89,7 +89,7 @@ def show_user_activities(user_activities, user_id):
         print("\n")  
     user_activities_df = user_activities_df.sort_values('timestamp')
 
-# print the total time spent per day by a given user
+# print the total time spent per day for a given user
 def print_time_spent_per_day(user_activities, user_id):
     df_activities = pd.DataFrame([vars(a) for a in user_activities])
     df_time_spent = calculate_time_spent_per_day(df_activities, user_id)
@@ -110,12 +110,93 @@ def print_login_count_per_day(user_activities, user_id):
 def show_comments_for_microblog(microblog_id):
     # create a dataframe for all comments of a given microblog
     microblog_comments = Comment.get_comments_for_microblog(microblog_id)
-    comments_for_microblog_df = create_events_dataframe(microblog_comments, "comments_for_microblog" + str(microblog_id))
+    comments_df = create_events_dataframe(microblog_comments, "comments_for_microblog " + str(microblog_id))
 
-# show all comments made by a given author
+# show comments made by a given author
 def show_comments_for_author(author_id):
-    author_comments = Comment.get_comments_by_author(author_id)
-    comments_for_author_df = create_events_dataframe(author_comments, "comments for author" + str(author_id))
+    authors_comments = Comment.get_comments_by_author(author_id)
+    authors_df = create_events_dataframe(authors_comments, "comments for author " + str(author_id))
+
+# print comment count for a given author
+def print_comment_count_for_author(author_id):
+    num_comments = Comment.count_comments_by_author(author_id)
+    print(f"Author {author_id} has made {num_comments} comments.")
+
+# print average comment length for a given author
+def print_avg_comment_length_for_author(author_id):
+    avg_length = Comment.average_comment_length_by_author(author_id)
+    print(f"Author {author_id}'s average comment length is {avg_length} characters.")
+
+# show the frequency of visits to microblogs for all users in the given DataFrame
+def show_microblog_visit_frequency(df_activities):
+    unique_user_ids = df_activities['user_id'].unique()
+    all_visits_data = []
+    for user_id in unique_user_ids:
+        microblog_visits_sequence = MicroblogVisitsSequence(user_id, df_activities)
+        visit_counts_sorted = microblog_visits_sequence.count_microblog_visits()
+        if not visit_counts_sorted.empty:
+            for index, row in visit_counts_sorted.iterrows():
+                all_visits_data.append([user_id, row['date'], row['visit_count']])
+    df_all_visits = pd.DataFrame(all_visits_data, columns=['User ID', 'Date', 'Visit Count'])
+    df_all_visits_sorted = df_all_visits.sort_values(by=['User ID', 'Date'])
+    print("\nMicroblog Visited Frequency for All Users:")
+    print(tabulate(df_all_visits_sorted, headers='keys', tablefmt='pretty'))
+
+# initialize emoji select sequence and return a dataframe of emoji select events for a given user
+def create_emoji_dataframe_for_user(userId):
+    emojiDf = EmojiSelectSequence(userId).emojiEventsDf
+    emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp']) # convert to datetime format
+    return emojiDf
+
+# plot emoji select sequence with score vs time for a given user
+def plot_emoji_select_sequence(emojiDf, userId):
+    plt.figure(figsize=(8, 5))
+    plt.plot(emojiDf['timestamp'], emojiDf['IntensityScore'], label='Intensity', marker='o', linestyle='solid')
+    plt.plot(emojiDf['timestamp'], emojiDf['EmotionScore'], label='Emotion', marker='x', linestyle='dashed')
+    plt.xlabel('Time')
+    plt.ylabel('Score')
+    plt.legend()
+    plt.title(f'Emoji Changes Over Time for User {userId}')
+    plt.show()
+
+# calculate and show emoji activity indicators for a given user
+def show_emoji_activity_indicators(emojiDf, userId):
+    indicators = EmojiIndicators(emojiDf)
+    frequency = indicators.get_frequency()
+    regularity = indicators.get_regularity()
+    emometer_scores = indicators.get_emometer_scores()
+    mindfulness = indicators.get_mindfulness()
+    results = [
+        ("Frequency", frequency if not isinstance(frequency, pd.Series) else float(frequency.iloc[0])),
+        ("Regularity (standard deviation)", regularity if not isinstance(regularity, pd.Series) else float(regularity.iloc[0])),
+        ("Emometer Intensity Baseline", emometer_scores.get('IntensityBaseline') if not isinstance(emometer_scores.get('IntensityBaseline'), pd.Series) else float(emometer_scores.get('IntensityBaseline').iloc[0])),
+        ("Emometer Intensity Average", emometer_scores.get('IntensityAverage') if not isinstance(emometer_scores.get('IntensityAverage'), pd.Series) else float(emometer_scores.get('IntensityAverage').iloc[0])),
+        ("Emometer Intensity StdDev", emometer_scores.get('IntensityStdDev') if not isinstance(emometer_scores.get('IntensityStdDev'), pd.Series) else float(emometer_scores.get('IntensityStdDev').iloc[0])),
+        ("Emometer Emotion Baseline", emometer_scores.get('EmotionBaseline') if not isinstance(emometer_scores.get('EmotionBaseline'), pd.Series) else float(emometer_scores.get('EmotionBaseline').iloc[0])),
+        ("Emometer Emotion Average", emometer_scores.get('EmotionAverage') if not isinstance(emometer_scores.get('EmotionAverage'), pd.Series) else float(emometer_scores.get('EmotionAverage').iloc[0])),
+        ("Emometer Emotion StdDev", emometer_scores.get('EmotionStdDev') if not isinstance(emometer_scores.get('EmotionStdDev'), pd.Series) else float(emometer_scores.get('EmotionStdDev').iloc[0])),
+        ("Mindfulness", mindfulness if not isinstance(mindfulness, pd.Series) else float(mindfulness.iloc[0])),
+    ]
+    print(f"\nEmoji Activity Indicators for User {userId}:\n")
+    print(tabulate(results, headers=["Indicator", "Value"], tablefmt="github"))
+
+# initialize video watch sequence and return a dataframe of video watch events for a given user
+def create_video_dataframe_for_user(userId, videoId):
+    videoDf = VideoWatchSequence(userId, videoId).videoEventsDf
+    videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:]) # get only time out of timestamp
+    videoDf["time_only"] = videoDf["timestamp"]
+    return videoDf
+
+# plot video watch sequence with action vs time for a given user
+def plot_video_watch_sequence(videoDf, userId, videoId):
+    x = videoDf["time_only"]
+    y = videoDf["kind"]
+    plt.figure(figsize=(8, 5))
+    plt.scatter(x,y)
+    plt.xlabel('Time')
+    plt.ylabel('Action')
+    plt.title(f'Video Actions for User {userId} for Video {videoId}')
+    plt.show()
 
 
 # main function
@@ -167,103 +248,38 @@ def main():
         print_login_count_per_day(user_activities, user_id)
 
         # show all comments for a given microblog
-        microblog_id = 6
-        show_comments_for_microblog(microblog_id)
+        specific_microblog_id = 6
+        show_comments_for_microblog(specific_microblog_id)
         # show all comments for a given author
         author_id = 30
-        show_comments_for_author(author_id)
+        authors_df = show_comments_for_author(author_id)
+        # analyze an author's all comments
+        print_comment_count_for_author(author_id)
+        print_avg_comment_length_for_author(author_id)
 
+        # show frequency of visits to microblogs for all users
+        show_microblog_visit_frequency(events_df)
 
+        # show a user's emoji select events
+        emoji_df = create_emoji_dataframe_for_user(user_id)
+        # plot
+        plot_emoji_select_sequence(emoji_df, user_id)
+        # show a user's emoji activity indicators
+        show_emoji_activity_indicators(emoji_df, user_id)
+        print()
 
-
-
-        # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
-        userId = 75
-        emojiDf = EmojiSelectSequence(userId).emojiEventsDf
-        # convert to datetime format
-        emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp'])
-        # plot score vs time
-        print("\n******** Examples of Emoji Select Events *********")
-        plt.figure(figsize=(8, 5))
-        plt.plot(emojiDf['timestamp'], emojiDf['IntensityScore'], label='Intensity', marker='o', linestyle='solid')
-        plt.plot(emojiDf['timestamp'], emojiDf['EmotionScore'], label='Emotion', marker='x', linestyle='dashed')
-        plt.xlabel('Time')
-        plt.ylabel('Score')
-        plt.legend()
-        plt.title('Emoji Changes Over Time for User ' + str(userId))
-        # plt.show()
-
-        tracker = EmojiIndicators(emojiDf)
-        # Calculate the indicators
-        frequency = tracker.get_frequency()
-        regularity = tracker.get_regularity()
-        emometer_scores = tracker.get_emometer_scores()
-        mindfulness = tracker.get_mindfulness()
-
-        # Display the results
-        results = [
-            ("Frequency", frequency),
-            ("Regularity (standard deviation)", regularity),
-            ("Emometer Intensity Baseline", emometer_scores.get('IntensityBaseline')),
-            ("Emometer Intensity Average", emometer_scores.get('IntensityAverage')),
-            ("Emometer Intensity StdDev", emometer_scores.get('IntensityStdDev')),
-            ("Emometer Emotion Baseline", emometer_scores.get('EmotionBaseline')),
-            ("Emometer Emotion Average", emometer_scores.get('EmotionAverage')),
-            ("Emometer Emotion StdDev", emometer_scores.get('EmotionStdDev')),
-            ("Mindfulness", mindfulness),
-        ]
-    
-        print(f"\nEmoji Activity Indicators for User {userId}:\n")
-        print(tabulate(results, headers=["Indicator", "Value"], tablefmt="github"))
-
-
-        # show an example of a user's video watching sequence by plotting pauses/plays vs time
-        userId = 74
+        # show a user's video watch events for a given video
+        user_id = 74
         videoId = 'video2'
-        videoDf = VideoWatchSequence(userId, videoId).videoEventsDf
-        # get only time out of timestamp
-        videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:])
-        # plot action vs time
-        videoDf["time_only"] = videoDf["timestamp"]
-        x = videoDf["time_only"]
-        y = videoDf["kind"]
-        # plt.scatter(x,y)
-        plt.xlabel('Time')
-        plt.ylabel('Action')
-        plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
-        # plt.show()
+        video_df = create_video_dataframe_for_user(user_id, videoId)
+        # plot
+        plot_video_watch_sequence(video_df, user_id, videoId)
 
-        # Microblog Visited Frequency
-        # get all users' id
-        unique_user_ids = df_activities['user_id'].unique()
-        print("\nMicroblog Visited Frequency for All Users:")
-        # initialize a list for all visits data
-        all_visits_data = []  
-        # iterate each user to create an instance, and get their visit counts
-        for user_id in unique_user_ids:
-            microblog_visits_sequence = MicroblogVisitsSequence(user_id, df_activities)
-            visit_counts_sorted = microblog_visits_sequence.count_microblog_visits()
-            if not visit_counts_sorted.empty:
-                for index, row in visit_counts_sorted.iterrows():
-                    all_visits_data.append([user_id, row['date'], row['visit_count']])
-        # convert all visits data to a DataFrame for easily showing the result
-        df_all_visits = pd.DataFrame(all_visits_data, columns=['User ID', 'Date', 'Visit Count'])
-        # sort the DataFrame by user_id and date
-        df_all_visits_sorted = df_all_visits.sort_values(by=['User ID', 'Date'])
-        # show the table
-        print(tabulate(df_all_visits_sorted, headers='keys', tablefmt='pretty'))
+        
+        
 
-        print("**************************************************")
 
-        author_id = 1
 
-        # Get the number of comments by the author
-        num_comments = Comment.count_comments_by_author(author_id)
-        print(f"Author {author_id} has made {num_comments} comments.")
-
-        # Get the average comment length by the author
-        avg_length = Comment.average_comment_length_by_author(author_id)
-        print(f"Author {author_id}'s average comment length is {avg_length} characters.")
 
         # Show State objects
 
@@ -384,6 +400,9 @@ def main():
 
         plt.show()
 
+
+
+        
     finally:
         db.close()
 
