@@ -1,5 +1,9 @@
 import pandas as pd
 
+# This EventContainer tracks and analyzes microblog page visits for a given user. 
+# It takes a userId and a data frame of user activities as parameters in its constructor.
+# It filters for microblog visits and counts visits by date.
+
 class MicroblogVisitsSequence:
     def __init__(self, user_id, df_activities):
         self.user_id = user_id
