@@ -51,13 +51,19 @@ class EmojiSelectSequence:
     # initializes an EmojiSelectSequence instance for a given user by filtering and sorting their emoji selection events into a DataFrame, 
     # then calculating and appending intensity and emotion scores for each event
     def __init__(self, userId):
+        self.emojiEventsDf = pd.DataFrame()
         emojiEvents = self._filterEvents()
-        # print(emojiEvents)
         df = pd.DataFrame.from_dict(emojiEvents)
-        self.emojiEventsDf = df[(df['user_id'] == userId) & (df['kind'] == 'EmojiSelect')].sort_values("timestamp")
-
-        # scores are added into lists of intensity_scores and emotion_scores respectively
-        self.emojiEventsDf['IntensityScore'], self.emojiEventsDf['EmotionScore'] = zip(*self.emojiEventsDf['emojiType'].apply(self.get_emoji_mapping))
+        if df.empty:
+            return
+        else:
+            filtered_emojiEventsDf = df[(df['user_id'] == userId) & (df['kind'] == 'EmojiSelect')].sort_values("timestamp")
+            if filtered_emojiEventsDf.empty:
+                print(f"Because of no emoji events found for userId: {userId}, an empty DataFrame is created")
+            else:
+                # scores are added into lists of intensity_scores and emotion_scores respectively
+                self.emojiEventsDf = filtered_emojiEventsDf
+                self.emojiEventsDf['IntensityScore'], self.emojiEventsDf['EmotionScore'] = zip(*self.emojiEventsDf['emojiType'].apply(self.get_emoji_mapping))
 
     # filter and return a list of events of selecting emoji
     @staticmethod

@@ -29,6 +29,9 @@ def query_database(db, query):
 
 # create and add event objects from query results
 def create_event_objects(results):
+    if not results:
+        print("No event results to process")
+        return
     for row in results:
         event = create_event_object(row)
         if event: 
@@ -38,6 +41,9 @@ def create_event_objects(results):
 
 # create and add post objects (Announcements, Comments, Microblogs) from query results
 def create_post_objects(results, post_type):
+    if not results:
+        print("No post results to process")
+        return
     for row in results:
         if post_type == 'announcement':
             post = create_announcement(row)
@@ -54,12 +60,18 @@ def create_post_objects(results, post_type):
 
 # create a dataframe from query results from database
 def create_events_dataframe(events, output_file_name):
+    if not events:
+        print("No events to process")
+        return
     events_df = pd.DataFrame.from_dict(events)
     events_df.to_csv(f"{output_file_name}.csv", index=False)
     return events_df
 
 # create a dataframe of synthetic Page Exits
 def create_page_exits_dataframe(events):
+    if not events:
+        print("No events to process")
+        return
     page_exit_list = State.populateOrderedEvents(events)
     page_exit_df = pd.DataFrame.from_dict(page_exit_list)
     page_exit_df.to_csv("page_exit_df.csv", index=False)
@@ -75,6 +87,9 @@ def filter_login_events(events_df, user_id):
 
 # show all activities for a given user
 def show_user_activities(user_activities, user_id):
+    if not user_activities:
+        print(f"No activities found for user {user_id}.")
+        return
     df_activities = pd.DataFrame([vars(a) for a in user_activities])
     df_activities['timestamp'] = pd.to_datetime(df_activities['timestamp'])
     df_activities['date'] = df_activities['timestamp'].dt.date
@@ -91,6 +106,9 @@ def show_user_activities(user_activities, user_id):
 
 # print the total time spent per day for a given user
 def print_time_spent_per_day(user_activities, user_id):
+    if not user_activities:
+        print(f"Because of no activities found for user {user_id}, time spent per day cannot be printed")
+        return
     df_activities = pd.DataFrame([vars(a) for a in user_activities])
     df_time_spent = calculate_time_spent_per_day(df_activities, user_id)
     print(f"Total time spent per day by user {user_id}:")
@@ -98,6 +116,9 @@ def print_time_spent_per_day(user_activities, user_id):
 
 # print login count per day for a given user
 def print_login_count_per_day(user_activities, user_id):
+    if not user_activities:
+        print(f"Because of no activities found for user {user_id}, login count per day cannot be printed")
+        return
     df_activities = pd.DataFrame([vars(a) for a in user_activities])
     login_count_per_user_day = count_login_page_activities_per_day(df_activities, user_id)
     if not login_count_per_user_day.empty:
@@ -145,11 +166,17 @@ def show_microblog_visit_frequency(df_activities):
 # initialize emoji select sequence and return a dataframe of emoji select events for a given user
 def create_emoji_dataframe_for_user(userId):
     emojiDf = EmojiSelectSequence(userId).emojiEventsDf
+    if emojiDf.empty:
+        print(f"Because of no emoji select events found for user {userId}, no dataframe can be created")
+        return pd.DataFrame()
     emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp']) # convert to datetime format
     return emojiDf
 
 # plot emoji select sequence with score vs time for a given user
 def plot_emoji_select_sequence(emojiDf, userId):
+    if emojiDf.empty:
+        print(f"Because of no emoji select events found for user {userId}, no plot can be shown")
+        return
     plt.figure(figsize=(8, 5))
     plt.plot(emojiDf['timestamp'], emojiDf['IntensityScore'], label='Intensity', marker='o', linestyle='solid')
     plt.plot(emojiDf['timestamp'], emojiDf['EmotionScore'], label='Emotion', marker='x', linestyle='dashed')
@@ -161,6 +188,9 @@ def plot_emoji_select_sequence(emojiDf, userId):
 
 # calculate and show emoji activity indicators for a given user
 def show_emoji_activity_indicators(emojiDf, userId):
+    if emojiDf.empty:
+        print(f"Because of no emoji select events found for user {userId}, no indicators can be shown")
+        return
     indicators = EmojiIndicators(emojiDf)
     frequency = indicators.get_frequency()
     regularity = indicators.get_regularity()
@@ -183,12 +213,18 @@ def show_emoji_activity_indicators(emojiDf, userId):
 # initialize video watch sequence and return a dataframe of video watch events for a given user
 def create_video_dataframe_for_user(userId, videoId):
     videoDf = VideoWatchSequence(userId, videoId).videoEventsDf
+    if videoDf.empty:
+        print(f"Because of no video watch events found for user {userId}, no dataframe can be created")
+        return
     videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:]) # get only time out of timestamp
     videoDf["time_only"] = videoDf["timestamp"]
     return videoDf
 
 # plot video watch sequence with action vs time for a given user
 def plot_video_watch_sequence(videoDf, userId, videoId):
+    if videoDf is None:
+        print(f"Because of no video watch events found for user {userId}, no plot can be shown")
+        return
     x = videoDf["time_only"]
     y = videoDf["kind"]
     plt.figure(figsize=(8, 5))
@@ -201,8 +237,11 @@ def plot_video_watch_sequence(videoDf, userId, videoId):
 
 # main function
 def main():
-    db = Database(os.path.join("db", "FromEchoDev240208a_echo_main_db_current.sqlite3"))
+    db_name = "FROMECHOTEST2404040907a_echo_main_db_current.sqlite3"
+    db = Database(os.path.join("db", db_name))
     db.connect()
+    user_id = 1
+
     try:
         # read in event objects
         event_query = "SELECT * FROM EchoApp_videoactivity"
@@ -234,7 +273,6 @@ def main():
         page_exit_df = create_page_exits_dataframe(Event.events)
 
         # =====examples for a user=====
-        user_id = 75
 
         # show a user's login events
         user_logins_df = filter_login_events(events_df, user_id)
@@ -251,7 +289,7 @@ def main():
         specific_microblog_id = 6
         show_comments_for_microblog(specific_microblog_id)
         # show all comments for a given author
-        author_id = 30
+        author_id = user_id
         authors_df = show_comments_for_author(author_id)
         # analyze an author's all comments
         print_comment_count_for_author(author_id)
@@ -262,143 +300,141 @@ def main():
 
         # show a user's emoji select events
         emoji_df = create_emoji_dataframe_for_user(user_id)
-        # plot
-        plot_emoji_select_sequence(emoji_df, user_id)
-        # show a user's emoji activity indicators
-        show_emoji_activity_indicators(emoji_df, user_id)
-        print()
+        if emoji_df is None:
+            print(f"No emoji select events for user {user_id}")
+        else:
+            # plot
+            plot_emoji_select_sequence(emoji_df, user_id)
+            # show a user's emoji activity indicators
+            show_emoji_activity_indicators(emoji_df, user_id)
+            print()
 
         # show a user's video watch events for a given video
-        user_id = 74
         videoId = 'video2'
         video_df = create_video_dataframe_for_user(user_id, videoId)
         # plot
         plot_video_watch_sequence(video_df, user_id, videoId)
 
-        
-        
-
-
-
 
         # Show State objects
 
-        # On Microblog state-- create sequence
-        microblog_state_seq = OnMicroblogSequence(page_exit_df, 76)
-        print("states of being on microblog for user 76")
+        # On Microblog state -- create sequence
+        microblog_state_seq = OnMicroblogSequence(page_exit_df, user_id)
+        print(f"states of being on microblog for user {user_id}")
         on_mb_df = microblog_state_seq.states_df
         print(on_mb_df)
 
-        # On video page-- state sequence
-        on_video_seq = OnVideoPageSequence(page_exit_df, 76)
-        print("states of being on videos page for user 76")
+        # On video page -- state sequence
+        on_video_seq = OnVideoPageSequence(page_exit_df, user_id)
+        print(f"states of being on videos page for user {user_id}")
         video_seq_df=on_video_seq.states_df
         print(video_seq_df)
 
         # Watching video -- state sequence
-        watching_video_states = WatchingVideoStateSequence(76, 'video1')
-        print('states of watching video1 for user 76')
+        watching_video_states = WatchingVideoStateSequence(user_id, 'video1')
+        print(f"states of watching video1 for user {user_id}")
         watching_df = watching_video_states.states_df
         print(watching_video_states.states_df)
-        # Logged In -- state sequnece
-        logged_in_states = LoggedInSequence(page_exit_df, 76)
-        print("states of being logged in for user 76")
+        # Logged In -- state sequence
+        logged_in_states = LoggedInSequence(page_exit_df, user_id)
+        print(f"states of being logged in for user {user_id}")
         logged_in_df = logged_in_states.states_df
         print(logged_in_df)
 
-        # plot
-        # video watching
-        watching_df["startTime"] = pd.to_datetime(watching_df["startTime"])
-        watching_df['endTime'] = pd.to_datetime(watching_df['endTime'])
-        video_seq_df["startTime"] = pd.to_datetime(video_seq_df["startTime"])
-        print(video_seq_df['endTime'])
-        video_seq_df["endTime"] = pd.to_datetime(
-            video_seq_df["endTime"], format="%Y-%m-%d %H:%M:%S.%f"
-        )
-        on_mb_df["startTime"] = pd.to_datetime(on_mb_df["startTime"])
-        on_mb_df["endTime"] = pd.to_datetime(
-            on_mb_df["endTime"], format="%Y-%m-%d %H:%M:%S.%f"
-        )
-        logged_in_df["startTime"] = pd.to_datetime(logged_in_df["startTime"])
-        logged_in_df["endTime"] = pd.to_datetime(
-            logged_in_df["endTime"], format="mixed"
-        )
-        print(authors_df)
-        authors_comments = Comment.get_comments_by_author(76)
-        # Convert the list of comments to a DataFrame for better tabular representation
-        authors_df = pd.DataFrame(authors_comments)
-        authors_df["createdDate"] = pd.to_datetime(authors_df["createdDate"], format="mixed")
-        authors_df["updatedDate"] = pd.to_datetime(authors_df["updatedDate"], format="mixed")
+        # # plot
+        # # video watching
+        # if not watching_df.empty:
+        #     watching_df["startTime"] = pd.to_datetime(watching_df["startTime"])
+        #     watching_df['endTime'] = pd.to_datetime(watching_df['endTime'])
+        #     video_seq_df["startTime"] = pd.to_datetime(video_seq_df["startTime"])
+        #     print(video_seq_df['endTime'])
+        #     video_seq_df["endTime"] = pd.to_datetime(
+        #         video_seq_df["endTime"], format="%Y-%m-%d %H:%M:%S.%f"
+        #     )
+        # on_mb_df["startTime"] = pd.to_datetime(on_mb_df["startTime"])
+        # on_mb_df["endTime"] = pd.to_datetime(
+        #     on_mb_df["endTime"], format="%Y-%m-%d %H:%M:%S.%f"
+        # )
+        # logged_in_df["startTime"] = pd.to_datetime(logged_in_df["startTime"])
+        # logged_in_df["endTime"] = pd.to_datetime(
+        #     logged_in_df["endTime"], format="mixed"
+        # )
+        # print(authors_df)
+        # authors_comments = Comment.get_comments_by_author(user_id)
+        # # Convert the list of comments to a DataFrame for better tabular representation
+        # authors_df = pd.DataFrame(authors_comments)
+        # authors_df["createdDate"] = pd.to_datetime(authors_df["createdDate"], format="mixed")
+        # authors_df["updatedDate"] = pd.to_datetime(authors_df["updatedDate"], format="mixed")
 
-        fig, ax = plt.subplots()
-        # Watching Video State
-        for _, row in watching_df.iterrows():
-            ax.plot(
-                [row["startTime"], row["endTime"]],
-                [row["kind"], row["kind"]],
-                marker="o", color='purple'
-            )
-        for _, row in video_seq_df.iterrows():
-            ax.plot(
-                [row["startTime"], row["endTime"]],
-                [row["kind"], row["kind"]],
-                marker="o", color='red'
-            )
-        for _, row in microblog_state_seq.states_df.iterrows():
-            ax.plot(
-                [row["startTime"], row["endTime"]],
-                [row["kind"], row["kind"]],
-                marker="o", color='blue'
-            )
-        for _, row in on_mb_df.iterrows():
-            ax.plot(
-                [row["startTime"], row["endTime"]],
-                [row["kind"], row["kind"]],
-                marker="o",
-                color="blue",
-            )
-        for _, row in logged_in_df.iterrows():
-            ax.plot(
-                [row["startTime"], row["endTime"]],
-                [row["kind"], row["kind"]],
-                marker="o",
-                color="blue",
-            )
-            # microblog comment instances
-        ax.plot(authors_df['createdDate'], ['PostedOnMicroblog'],marker="o", color="black")
-        ax.plot(
-            authors_df["updatedDate"], ["UpdatedMicrblogComment"], marker="o", color="black"
-        )
+        # fig, ax = plt.subplots()
+        # # Watching Video State
+        # for _, row in watching_df.iterrows():
+        #     ax.plot(
+        #         [row["startTime"], row["endTime"]],
+        #         [row["kind"], row["kind"]],
+        #         marker="o", color='purple'
+        #     )
+        # for _, row in video_seq_df.iterrows():
+        #     ax.plot(
+        #         [row["startTime"], row["endTime"]],
+        #         [row["kind"], row["kind"]],
+        #         marker="o", color='red'
+        #     )
+        # for _, row in microblog_state_seq.states_df.iterrows():
+        #     ax.plot(
+        #         [row["startTime"], row["endTime"]],
+        #         [row["kind"], row["kind"]],
+        #         marker="o", color='blue'
+        #     )
+        # for _, row in on_mb_df.iterrows():
+        #     ax.plot(
+        #         [row["startTime"], row["endTime"]],
+        #         [row["kind"], row["kind"]],
+        #         marker="o",
+        #         color="blue",
+        #     )
+        # for _, row in logged_in_df.iterrows():
+        #     ax.plot(
+        #         [row["startTime"], row["endTime"]],
+        #         [row["kind"], row["kind"]],
+        #         marker="o",
+        #         color="blue",
+        #     )
+        #     # microblog comment instances
+        # ax.plot(authors_df['createdDate'], ['PostedOnMicroblog'],marker="o", color="black")
+        # ax.plot(
+        #     authors_df["updatedDate"], ["UpdatedMicrblogComment"], marker="o", color="black"
+        # )
 
-        # Set labels and title
-        # Customize font for different text elements
-        title_font = {'family': 'serif', 'color': 'blue', 'weight': 'bold', 'size': 16}
-        axis_label_font = {'family': 'sans-serif', 'color': 'green', 'weight': 'normal', 'size': 12}
-        tick_label_font = {'family': 'monospace', 'color': 'red', 'weight': 'normal', 'size': 10}   
-        ax.set_xlabel('Timestamp', fontdict=axis_label_font)
-        ax.set_ylabel('Kind of Interaction', fontdict=axis_label_font)
-        ax.set_title('Timeline of Interactions for User 76', fontdict=title_font)
-        plt.xticks(rotation=20)
-        plt.xticks(fontsize=6)
+        # # Set labels and title
+        # # Customize font for different text elements
+        # title_font = {'family': 'serif', 'color': 'blue', 'weight': 'bold', 'size': 16}
+        # axis_label_font = {'family': 'sans-serif', 'color': 'green', 'weight': 'normal', 'size': 12}
+        # tick_label_font = {'family': 'monospace', 'color': 'red', 'weight': 'normal', 'size': 10}   
+        # ax.set_xlabel('Timestamp', fontdict=axis_label_font)
+        # ax.set_ylabel('Kind of Interaction', fontdict=axis_label_font)
+        # ax.set_title('Timeline of Interactions for User 76', fontdict=title_font)
+        # plt.xticks(rotation=20)
+        # plt.xticks(fontsize=6)
 
-        date_format = DateFormatter('%Y-%m-%d %H:%M:%S.%f')
-        ax.xaxis.set_major_formatter(date_format)
+        # date_format = DateFormatter('%Y-%m-%d %H:%M:%S.%f')
+        # ax.xaxis.set_major_formatter(date_format)
 
-        mb_count = Comment.count_comments_by_author(76)
-        avg_len = Comment.average_comment_length_by_author(76)
-        login_amt = count_login_page_activities_per_day(user_activities, 76)
-        print(login_amt["login_count"].sum())
-        print(login_amt["login_count"].count())
-        avg_logins = login_amt['login_count'].sum() / login_amt['login_count'].count()
-        text_content = """
-            Number of Microblog posts made by this author: {}
-            Average Length of Microblog Posts In Characters: {}
-            Avg Amount of Logins Per Day: {}       
-        """.format(mb_count, avg_len, avg_logins)
-        ax.text(0.3, 0.5, text_content, transform=ax.transAxes,
-        fontsize=12, ha='center', va='center')
+        # mb_count = Comment.count_comments_by_author(76)
+        # avg_len = Comment.average_comment_length_by_author(76)
+        # login_amt = count_login_page_activities_per_day(user_activities, 76)
+        # print(login_amt["login_count"].sum())
+        # print(login_amt["login_count"].count())
+        # avg_logins = login_amt['login_count'].sum() / login_amt['login_count'].count()
+        # text_content = """
+        #     Number of Microblog posts made by this author: {}
+        #     Average Length of Microblog Posts In Characters: {}
+        #     Avg Amount of Logins Per Day: {}       
+        # """.format(mb_count, avg_len, avg_logins)
+        # ax.text(0.3, 0.5, text_content, transform=ax.transAxes,
+        # fontsize=12, ha='center', va='center')
 
-        plt.show()
+        # plt.show()
 
 
 
