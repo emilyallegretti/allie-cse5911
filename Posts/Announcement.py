@@ -13,4 +13,5 @@ class Announcement:
     # adds an Announcement to announcements list.
     def add(announcement):
         Announcement.announcements.append(announcement.__dict__)
+        
     

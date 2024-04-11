@@ -8,6 +8,16 @@ import os
 
 from SqliteUtils import Database
 from EventFactory import create_announcement, create_comment, create_event_object, create_microblog
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import plotly.express as px
+import plotly.graph_objs as go
+import pandas as pd
+
+
+from EventContainers.EmojiSelectSequence import EmojiSelectSequence
+from EventContainers.VideoWatchSequence import VideoWatchSequence
 from Events.Event import Event
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
@@ -235,19 +245,42 @@ def plot_video_watch_sequence(videoDf, userId, videoId):
     plt.show()
 
 
-# main function
+def countTotalSessionTime(login_df):
+    if login_df.states_df:
+        df = login_df.states_df
+        # Convert string timestamps to datetime objects
+        df["startTime"] = pd.to_datetime(df["startTime"])
+        df["endTime"] = pd.to_datetime(df["endTime"])
+
+        # Calculate duration for each row
+        df["duration"] = df["endTime"] - df["startTime"]
+
+        # Calculate total duration
+        total_duration = df["duration"].sum()
+
+        return total_duration
+
+
 def main():
-    db_name = "FROMECHOTEST2404040907a_echo_main_db_current.sqlite3"
+    db_name = "FromEchoDev240208a_echo_main_db_current.sqlite3"
     db = Database(os.path.join("db", db_name))
     db.connect()
     user_id = 1
 
-    try:
+    try: 
+        ### PARSING EVENT LOG DATA FROM ECHO DATABASE
+
         # read in event objects
         event_query = "SELECT * FROM EchoApp_videoactivity"
         results = query_database(db, event_query)
         create_event_objects(results)
 
+        for row in results:
+            event = create_event_object(row)
+            if event: 
+                Event.add(event)
+            else:
+                print("Invalid event")
         # read in announcements, comments, microblog objects
         ann_query = "SELECT * from EchoApp_announcement"
         results = query_database(db, ann_query)
@@ -265,7 +298,7 @@ def main():
         for row in activity_results:
             activity = UserActivity.create_user_activity(row)
             user_activities.append(activity)
-        
+
         # create a df for all users' activities based on videoactivities
         events_df = create_events_dataframe(Event.events, "events_df")
 
@@ -309,136 +342,345 @@ def main():
             show_emoji_activity_indicators(emoji_df, user_id)
             print()
 
-        # show a user's video watch events for a given video
-        videoId = 'video2'
-        video_df = create_video_dataframe_for_user(user_id, videoId)
-        # plot
-        plot_video_watch_sequence(video_df, user_id, videoId)
+        # Get all comments for a specific microblog
+        specific_microblog_id = 6  # replace with the actual microblog_id you want to query
+        comments = Comment.get_comments_for_microblog(specific_microblog_id)
 
+        comments_df = pd.DataFrame(comments)
 
-        # Show State objects
+        print(comments_df)
+        print("-" * 144)
 
-        # On Microblog state -- create sequence
-        microblog_state_seq = OnMicroblogSequence(page_exit_df, user_id)
-        print(f"states of being on microblog for user {user_id}")
-        on_mb_df = microblog_state_seq.states_df
-        print(on_mb_df)
+        # Get all comments for a specific author
+        author_id = 30
+        authors_comments = Comment.get_comments_by_author(author_id)
 
-        # On video page -- state sequence
-        on_video_seq = OnVideoPageSequence(page_exit_df, user_id)
-        print(f"states of being on videos page for user {user_id}")
-        video_seq_df=on_video_seq.states_df
-        print(video_seq_df)
+        # Convert the list of comments to a DataFrame for better tabular representation
+        authors_df = pd.DataFrame(authors_comments)
 
-        # Watching video -- state sequence
-        watching_video_states = WatchingVideoStateSequence(user_id, 'video1')
-        print(f"states of watching video1 for user {user_id}")
-        watching_df = watching_video_states.states_df
-        print(watching_video_states.states_df)
-        # Logged In -- state sequence
-        logged_in_states = LoggedInSequence(page_exit_df, user_id)
-        print(f"states of being logged in for user {user_id}")
-        logged_in_df = logged_in_states.states_df
-        print(logged_in_df)
+        # Display the DataFrame
+        print(authors_df)
 
-        # # plot
-        # # video watching
-        # if not watching_df.empty:
-        #     watching_df["startTime"] = pd.to_datetime(watching_df["startTime"])
-        #     watching_df['endTime'] = pd.to_datetime(watching_df['endTime'])
-        #     video_seq_df["startTime"] = pd.to_datetime(video_seq_df["startTime"])
-        #     print(video_seq_df['endTime'])
-        #     video_seq_df["endTime"] = pd.to_datetime(
-        #         video_seq_df["endTime"], format="%Y-%m-%d %H:%M:%S.%f"
-        #     )
-        # on_mb_df["startTime"] = pd.to_datetime(on_mb_df["startTime"])
-        # on_mb_df["endTime"] = pd.to_datetime(
-        #     on_mb_df["endTime"], format="%Y-%m-%d %H:%M:%S.%f"
-        # )
-        # logged_in_df["startTime"] = pd.to_datetime(logged_in_df["startTime"])
-        # logged_in_df["endTime"] = pd.to_datetime(
-        #     logged_in_df["endTime"], format="mixed"
-        # )
-        # print(authors_df)
-        # authors_comments = Comment.get_comments_by_author(user_id)
-        # # Convert the list of comments to a DataFrame for better tabular representation
-        # authors_df = pd.DataFrame(authors_comments)
-        # authors_df["createdDate"] = pd.to_datetime(authors_df["createdDate"], format="mixed")
-        # authors_df["updatedDate"] = pd.to_datetime(authors_df["updatedDate"], format="mixed")
+        # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
+        userId = 75
+        emojiDf = EmojiSelectSequence(userId).emojiEventsDf
+        # convert to datetime format
+        if not emojiDf.empty:
+            emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp'])
+        # plot score vs time
+        print("\n******** Examples of Emoji Select Events *********")
 
-        # fig, ax = plt.subplots()
-        # # Watching Video State
-        # for _, row in watching_df.iterrows():
-        #     ax.plot(
-        #         [row["startTime"], row["endTime"]],
-        #         [row["kind"], row["kind"]],
-        #         marker="o", color='purple'
-        #     )
-        # for _, row in video_seq_df.iterrows():
-        #     ax.plot(
-        #         [row["startTime"], row["endTime"]],
-        #         [row["kind"], row["kind"]],
-        #         marker="o", color='red'
-        #     )
-        # for _, row in microblog_state_seq.states_df.iterrows():
-        #     ax.plot(
-        #         [row["startTime"], row["endTime"]],
-        #         [row["kind"], row["kind"]],
-        #         marker="o", color='blue'
-        #     )
-        # for _, row in on_mb_df.iterrows():
-        #     ax.plot(
-        #         [row["startTime"], row["endTime"]],
-        #         [row["kind"], row["kind"]],
-        #         marker="o",
-        #         color="blue",
-        #     )
-        # for _, row in logged_in_df.iterrows():
-        #     ax.plot(
-        #         [row["startTime"], row["endTime"]],
-        #         [row["kind"], row["kind"]],
-        #         marker="o",
-        #         color="blue",
-        #     )
-        #     # microblog comment instances
-        # ax.plot(authors_df['createdDate'], ['PostedOnMicroblog'],marker="o", color="black")
-        # ax.plot(
-        #     authors_df["updatedDate"], ["UpdatedMicrblogComment"], marker="o", color="black"
-        # )
+        # Initialize the Dash app
+        app = dash.Dash(__name__)
 
-        # # Set labels and title
-        # # Customize font for different text elements
-        # title_font = {'family': 'serif', 'color': 'blue', 'weight': 'bold', 'size': 16}
-        # axis_label_font = {'family': 'sans-serif', 'color': 'green', 'weight': 'normal', 'size': 12}
-        # tick_label_font = {'family': 'monospace', 'color': 'red', 'weight': 'normal', 'size': 10}   
-        # ax.set_xlabel('Timestamp', fontdict=axis_label_font)
-        # ax.set_ylabel('Kind of Interaction', fontdict=axis_label_font)
-        # ax.set_title('Timeline of Interactions for User 76', fontdict=title_font)
-        # plt.xticks(rotation=20)
-        # plt.xticks(fontsize=6)
+        # Define the layout of the Dash app
+        # Define the layout of the Dash app
+        app.layout = html.Div([
+            dcc.Dropdown(
+                id='user-dropdown',
+                options=[{'label': str(user_id), 'value': user_id} for user_id in events_df['user_id'].unique()],
+                value=events_df['user_id'].unique()[0],  # Default value is the first user ID
+                clearable=False
+            ),
+            dcc.Dropdown(
+                id='timeframe-dropdown',
+                options=[
+                    {'label': 'From Start Date', 'value': 'from_start'},
+                    {'label': 'Last 7 Days', 'value': 'last_7_days'},
+                    {'label': 'Last Login Session', 'value': 'last_login_session'}
+                ],
+                value='from_start',  # Default value is 'From Start Date'
+                clearable=False
+            ),
+            dcc.Graph(id='combined-plot')
+        ])
+        print("authors_df")
+        print(authors_df)
 
-        # date_format = DateFormatter('%Y-%m-%d %H:%M:%S.%f')
-        # ax.xaxis.set_major_formatter(date_format)
+        # Define callback to update the plot based on selected user ID and time frame
+        @app.callback(
+            Output('combined-plot', 'figure'),
+            [Input('user-dropdown', 'value'),
+            Input('timeframe-dropdown', 'value')]
+        )
+        def update_combined_plot(selected_user_id, selected_timeframe):
+            # Fetch data based on selected user ID and time frame
 
-        # mb_count = Comment.count_comments_by_author(76)
-        # avg_len = Comment.average_comment_length_by_author(76)
-        # login_amt = count_login_page_activities_per_day(user_activities, 76)
-        # print(login_amt["login_count"].sum())
-        # print(login_amt["login_count"].count())
-        # avg_logins = login_amt['login_count'].sum() / login_amt['login_count'].count()
-        # text_content = """
-        #     Number of Microblog posts made by this author: {}
-        #     Average Length of Microblog Posts In Characters: {}
-        #     Avg Amount of Logins Per Day: {}       
-        # """.format(mb_count, avg_len, avg_logins)
-        # ax.text(0.3, 0.5, text_content, transform=ax.transAxes,
-        # fontsize=12, ha='center', va='center')
+            # Fetch new data for the selected user ID
+            microblog_state_seq = OnMicroblogSequence(page_exit_df, selected_user_id)
+            print("states of being on microblog for user selected_user_id")
+            on_mb_df = microblog_state_seq.states_df
 
-        # plt.show()
+            # On video page-- state sequence
+            on_video_seq = OnVideoPageSequence(page_exit_df, selected_user_id)
+            print("states of being on videos page for user selected_user_id")
+            video_seq_df=on_video_seq.states_df
 
+            # Watching video -- state sequence
+            # TODO: each video id is currently hardcoded in to get each dataframe. This should probably be paramaterized in the future
+            watching_video1_states = WatchingVideoStateSequence(selected_user_id, 'video1')
+            print('states of watching video1 for user selected_user_id')
+            watching1_df = watching_video1_states.states_df
+            watching_video2_states = WatchingVideoStateSequence(
+                selected_user_id, "video2"
+            )
+            # Logged In -- state sequnece
+            logged_in_states = LoggedInSequence(page_exit_df, selected_user_id)
+            print("states of being logged in for user selected_user_id")
+            logged_in_df = logged_in_states.states_df
 
+            average_comment_length = None
+            total_time_login = None
+            login_amt=None
+            # convert timestamp columns to datetime format
+            if not watching1_df.empty:
+                watching1_df["startTime"] = pd.to_datetime(watching1_df["startTime"],format="mixed")
+                watching1_df["endTime"] = pd.to_datetime(
+                    watching1_df["endTime"], format="mixed"
+                )
+            if not video_seq_df.empty:
+                video_seq_df["startTime"] = pd.to_datetime(
+                    video_seq_df["startTime"], format="mixed"
+                )
+                video_seq_df["endTime"] = pd.to_datetime(
+                    video_seq_df["endTime"], format="mixed"
+                )
+            if not on_mb_df.empty:
+                on_mb_df["startTime"] = pd.to_datetime(
+                    on_mb_df["startTime"], format="mixed"
+                )
+                on_mb_df["endTime"] = pd.to_datetime(
+                    on_mb_df["endTime"], format="mixed"
+                )
+            if not logged_in_df.empty:
+                logged_in_df["startTime"] = pd.to_datetime(
+                    logged_in_df["startTime"], format="mixed"
+                )
+                logged_in_df["endTime"] = pd.to_datetime(
+                    logged_in_df["endTime"], format="mixed"
+                )
+            authors_comments = Comment.get_comments_by_author(selected_user_id)
+            # Convert the list of comments to a DataFrame for better tabular representation
+            authors_df = pd.DataFrame(authors_comments)
+            if not authors_df.empty:
+                authors_df["createdDate"] = pd.to_datetime(authors_df["createdDate"], format="mixed")
+                authors_df["updatedDate"] = pd.to_datetime(authors_df["updatedDate"], format="mixed")
 
-        
+            #  Now filter these dataframes based on the time frame selected. If 'from start' is selected, no need for filtering
+            if selected_timeframe == "last_7_days":
+                today = pd.Timestamp('today')
+                last_week = today - pd.Timedelta(days=7)
+                # Filter dataframes for the last 7 days (if not empty)
+                if not watching1_df.empty:
+                    watching_df_filtered = watching1_df[(watching1_df['startTime'] >= last_week) & (watching1_df['startTime'] <= today)]
+                else:
+                    watching_df_filtered = watching1_df.copy()  # Empty copy to avoid errors
+
+                if not video_seq_df.empty:
+                    video_seq_df_filtered = video_seq_df[(video_seq_df['startTime'] >= last_week) & (video_seq_df['startTime'] <= today)]
+                else:
+                    video_seq_df_filtered = video_seq_df.copy()
+
+                if not on_mb_df.empty:
+                    on_mb_df_filtered = on_mb_df[(on_mb_df['startTime'] >= last_week) & (on_mb_df['startTime'] <= today)]
+                else:
+                    on_mb_df_filtered = on_mb_df.copy()
+
+                if not logged_in_df.empty:
+                    logged_in_df_filtered = logged_in_df[(logged_in_df['startTime'] >= last_week) & (logged_in_df['startTime'] <= today)]
+                else:
+                    logged_in_df_filtered = logged_in_df.copy()
+
+                if not authors_df.empty:
+                    authors_df_filtered = authors_df[(authors_df['createdDate'] >= last_week) & (authors_df['createdDate'] <= today)]
+                else:
+                    authors_df_filtered = authors_df.copy()
+
+                # get appropriate analytics:
+                # todo: overall engagement and blogging engagement?
+                video_watch_frequency = len(watching_df_filtered)
+                # video_watch_time = watching_df_filtered.countTotalWatchTime()
+                mb_count = len(authors_df_filtered)
+                # # Calculate the length of each comment
+                # authors_df['comment_length'] = authors_df['comment'].apply(lambda x: len(x))
+                # # Calculate the average comment length
+                # average_comment_length = authors_df['comment_length'].mean()
+                login_amt = len(logged_in_df_filtered)
+               # total_time_login = logged_in_df_filtered.countTotalSessionTime()
+
+            elif selected_timeframe == "last_login_session":
+                # Fetch data for the last login session
+                # Identify the most recent login session
+                if not logged_in_df.empty:
+                    most_recent_login = logged_in_df.sort_values(by='startTime', ascending=False).iloc[0]
+                    recent_login_start = most_recent_login['startTime']
+                    recent_login_end = most_recent_login['endTime']
+                else:
+                    # Handle case where logged_in_df is empty (no login sessions)
+                    recent_login_start = pd.Timestamp('NaT')  # Not a Time
+                    recent_login_end = pd.Timestamp('NaT')
+
+                # Filter dataframes based on most recent login session (if not empty)
+                if not watching1_df.empty:
+                    watching_df_filtered = watching1_df[(watching1_df['startTime'] >= recent_login_start) & (watching1_df['startTime'] <= recent_login_end)]
+                else:
+                    watching_df_filtered = watching1_df.copy()
+
+                if not video_seq_df.empty:
+                    video_seq_df_filtered = video_seq_df[(video_seq_df['startTime'] >= recent_login_start) & (video_seq_df['startTime'] <= recent_login_end)]
+                else:
+                    video_seq_df_filtered = video_seq_df.copy()
+                if not on_mb_df.empty:
+                    on_mb_df_filtered = on_mb_df[(on_mb_df['startTime'] >= recent_login_start) & (on_mb_df['startTime'] <= recent_login_end)]
+                else:
+                    on_mb_df_filtered = on_mb_df.copy()
+
+                if not logged_in_df.empty:
+                    logged_in_df_filtered = logged_in_df[(logged_in_df['startTime'] >= recent_login_start) & (logged_in_df['startTime'] <= recent_login_end)]
+                else:
+                    logged_in_df_filtered = logged_in_df.copy()
+
+                if not authors_df.empty:
+                    authors_df_filtered = authors_df[(authors_df['createdDate'] >= recent_login_start) & (authors_df['createdDate'] <= recent_login_end)]
+                else:
+                    authors_df_filtered = authors_df.copy()
+                    # get appropriate analytics:
+                # todo: overall engagement and blogging engagement?
+                video_watch_frequency = len(watching_df_filtered)
+                # video_watch_time = watching_df_filtered.countTotalWatchTime()
+                mb_count = len(authors_df_filtered)
+                # Calculate the length of each comment
+                print("authors_df")
+                print(authors_df)
+                # authors_df["comment_length"] = authors_df["comment"].apply(
+                #     lambda x: len(x)
+                # )
+                # # Calculate the average comment length
+                # average_comment_length = authors_df["comment_length"].mean()
+                login_amt = len(logged_in_df_filtered)
+               # total_time_login = logged_in_df_filtered.countTotalSessionTime()
+
+            else:
+                # Default to fetching all data from the start date
+                # no need for filtering, just copy each df
+                watching_df_filtered = watching1_df.copy()
+                video_seq_df_filtered = video_seq_df.copy()
+                on_mb_df_filtered = on_mb_df.copy()
+                logged_in_df_filtered = logged_in_df.copy()
+                authors_df_filtered = authors_df.copy()
+
+                # get appropriate analytics:
+                # TODO: overall engagement and blogging engagement?
+                video_watch_frequency = len(watching_df_filtered)
+                # video_watch_time = watching_df_filtered.countTotalWatchTime()
+                mb_count = len(authors_df_filtered)
+            # if not authors_df.empty:
+            # Calculate the length of each comment
+            #     authors_df["comment_length"] = authors_df["comment"].apply(
+            #         lambda x: len(x)
+            #     )
+            #     # Calculate the average comment length
+            #     average_comment_length = authors_df["comment_length"].mean()
+            # login_amt = len(logged_in_df_filtered)
+            #  total_time_login = countTotalSessionTime(logged_in_df_filtered)
+
+            fig = go.Figure()
+
+            # Plot each dataset from different dataframes
+            for _, row in watching_df_filtered.iterrows():
+                fig.add_trace(go.Scatter(x=[row["startTime"], row["endTime"]],
+                                        y=[row["kind"], row["kind"]],
+                                        mode='lines+markers', line=dict(color='purple',width=2), name='Watching Video'))
+
+            for _, row in video_seq_df_filtered.iterrows():
+                fig.add_trace(go.Scatter(x=[row["startTime"], row["endTime"]],
+                                        y=[row["kind"], row["kind"]],
+                                        mode='lines+markers', line=dict(color='red',width=2), name='On Video Page'))
+
+            for _, row in on_mb_df_filtered.iterrows():
+                fig.add_trace(go.Scatter(x=[row["startTime"], row["endTime"]],
+                                        y=[row["kind"], row["kind"]],
+                                        mode='lines+markers', line=dict(color='blue'), name='On Microblog'))
+
+            for _, row in logged_in_df_filtered.iterrows():
+                fig.add_trace(go.Scatter(x=[row["startTime"], row["endTime"]],
+                                        y=[row["kind"], row["kind"]],
+                                        mode='lines+markers', line=dict(color='blue'), name='Logged In'))
+
+            # microblog comment instances
+            if not authors_df_filtered.empty:
+                fig.add_trace(go.Scatter(x=authors_df['createdDate'], y=['PostedOnMicroblog'],
+                                        mode='markers', marker=dict(color='black'), name='Posted On Microblog'))
+
+                fig.add_trace(go.Scatter(x=authors_df["updatedDate"], y=["UpdatedMicrblogComment"],
+                                        mode='markers', marker=dict(color='black'), name='Updated Microblog Comment'))
+
+                # add annotations for analytics
+                # todo: overall engagement and blogging engagement?
+
+                # get appropriate analytics:
+                # todo: overall engagement and blogging engagement?
+            fig.add_annotation(
+                x=0.5,
+                y=0.1,  # Moved to the bottom third
+                xref="paper",
+                yref="paper",
+                text=f"Video Watch Frequency: {video_watch_frequency}",
+                showarrow=False,
+                font=dict(family="Arial", size=12, color="black"),
+            )
+
+            fig.add_annotation(
+                x=0.5,
+                y=0.2,  # Moved to the bottom third
+                xref="paper",
+                yref="paper",
+                text=f"Login Frequency: {login_amt}",
+                showarrow=False,
+                font=dict(family="Arial", size=12, color="black"),
+            )
+
+            fig.add_annotation(
+                x=0.5,
+                y=0.3,  # Moved to the bottom third
+                xref="paper",
+                yref="paper",
+                text=f"Microblog Post Frequency: {mb_count}",
+                showarrow=False,
+                font=dict(family="Arial", size=12, color="black"),
+            )
+
+            fig.add_annotation(
+                x=0.5,
+                y=0.4,  # Moved to the bottom third
+                xref="paper",
+                yref="paper",
+                text=f"Average Discussion Post Length: {average_comment_length}",
+                showarrow=False,
+                font=dict(family="Arial", size=12, color="black"),
+            )
+
+            fig.add_annotation(
+                x=0.5,
+                y=0.5,  # Moved to the bottom third
+                xref="paper",
+                yref="paper",
+                text=f"Total Session Time: {total_time_login}",
+                showarrow=False,
+                font=dict(family="Arial", size=12, color="black")
+            )
+
+            # Update layout
+            fig.update_layout(title=f'Activity For User Id = {selected_user_id} in Timeframe {selected_timeframe}',
+                            xaxis_title='Time',
+                            yaxis_title='State')
+
+            return fig
+
+        # Run the Dash app
+        if __name__ == '__main__':
+            app.run_server(debug=True)
+
     finally:
         db.close()
 

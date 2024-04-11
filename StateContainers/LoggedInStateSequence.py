@@ -15,6 +15,21 @@ class LoggedInSequence():
         # convert _states to a dataframe of state objects
         self.states_df = pd.DataFrame.from_dict(self._states)
 
+    def countTotalSessionTime(self):
+        if self.states_df:
+            df = self.states_df
+            # Convert string timestamps to datetime objects
+            df["startTime"] = pd.to_datetime(df["startTime"])
+            df["endTime"] = pd.to_datetime(df["endTime"])
+
+            # Calculate duration for each row
+            df["duration"] = df["endTime"] - df["startTime"]
+
+            # Calculate total duration
+            total_duration = df["duration"].sum()
+
+            return total_duration
+
     # creates a list of all LoggedIn state objects associated with the specific userId
     def getStates(self, events_df: pd.DataFrame):
         states = []
@@ -26,7 +41,6 @@ class LoggedInSequence():
         # as a dict object
         starttime = None
         for row in events_df.values:
-            print(row)
             # index 1 corresponds to 'kind' attribute, 3 to 'page', 2 to 'timestamp'
             if row[1] == "Login":
                 starttime = row[2]
