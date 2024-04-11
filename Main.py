@@ -245,7 +245,22 @@ def plot_video_watch_sequence(videoDf, userId, videoId):
     plt.show()
 
 
-# main function
+def countTotalSessionTime(login_df):
+    if login_df.states_df:
+        df = login_df.states_df
+        # Convert string timestamps to datetime objects
+        df["startTime"] = pd.to_datetime(df["startTime"])
+        df["endTime"] = pd.to_datetime(df["endTime"])
+
+        # Calculate duration for each row
+        df["duration"] = df["endTime"] - df["startTime"]
+
+        # Calculate total duration
+        total_duration = df["duration"].sum()
+
+        return total_duration
+
+
 def main():
     db_name = "FROMECHOTEST2404040907a_echo_main_db_current.sqlite3"
     db = Database(os.path.join("db", db_name))
@@ -403,6 +418,8 @@ def main():
             ),
             dcc.Graph(id='combined-plot')
         ])
+        print("authors_df")
+        print(authors_df)
 
         # Define callback to update the plot based on selected user ID and time frame
         @app.callback(
@@ -438,7 +455,9 @@ def main():
             print("states of being logged in for user selected_user_id")
             logged_in_df = logged_in_states.states_df
     
-
+            average_comment_length = None
+            total_time_login = None
+            login_amt=None
             # convert timestamp columns to datetime format
             if not watching1_df.empty:
                 watching1_df["startTime"] = pd.to_datetime(watching1_df["startTime"])
@@ -500,10 +519,10 @@ def main():
                 video_watch_frequency = len(watching_df_filtered)
                 #video_watch_time = watching_df_filtered.countTotalWatchTime()
                 mb_count = len(authors_df_filtered)
-                # Calculate the length of each comment
-                authors_df['comment_length'] = authors_df['comment'].apply(lambda x: len(x))
-                # Calculate the average comment length
-                average_comment_length = authors_df['comment_length'].mean()
+                # # Calculate the length of each comment
+                # authors_df['comment_length'] = authors_df['comment'].apply(lambda x: len(x))
+                # # Calculate the average comment length
+                # average_comment_length = authors_df['comment_length'].mean()
                 login_amt = len(logged_in_df_filtered)
                 total_time_login = logged_in_df_filtered.countTotalSessionTime()
 
@@ -551,11 +570,11 @@ def main():
                 # Calculate the length of each comment
                 print("authors_df")
                 print(authors_df)
-                authors_df["comment_length"] = authors_df["comment"].apply(
-                    lambda x: len(x)
-                )
-                # Calculate the average comment length
-                average_comment_length = authors_df["comment_length"].mean()
+                # authors_df["comment_length"] = authors_df["comment"].apply(
+                #     lambda x: len(x)
+                # )
+                # # Calculate the average comment length
+                # average_comment_length = authors_df["comment_length"].mean()
                 login_amt = len(logged_in_df_filtered)
                 total_time_login = logged_in_df_filtered.countTotalSessionTime()
 
@@ -573,14 +592,15 @@ def main():
                 video_watch_frequency = len(watching_df_filtered)
                 #video_watch_time = watching_df_filtered.countTotalWatchTime()
                 mb_count = len(authors_df_filtered)
+               # if not authors_df.empty:
                 # Calculate the length of each comment
-                authors_df["comment_length"] = authors_df["comment"].apply(
-                    lambda x: len(x)
-                )
-                # Calculate the average comment length
-                average_comment_length = authors_df["comment_length"].mean()
-                login_amt = len(logged_in_df_filtered)
-                total_time_login = logged_in_df_filtered.countTotalSessionTime()
+                #     authors_df["comment_length"] = authors_df["comment"].apply(
+                #         lambda x: len(x)
+                #     )
+                #     # Calculate the average comment length
+                #     average_comment_length = authors_df["comment_length"].mean()
+                # login_amt = len(logged_in_df_filtered)
+              #  total_time_login = countTotalSessionTime(logged_in_df_filtered)
 
             fig = go.Figure()
 
@@ -620,58 +640,54 @@ def main():
                 # todo: overall engagement and blogging engagement?
             fig.add_annotation(
                 x=0.5,
-                y=-0.15,
+                y=0.05,  # Moved to the bottom half (0.05 is lower than 0.5)
                 xref="paper",
                 yref="paper",
                 text=f"Video Watch Frequency: {video_watch_frequency}",
                 showarrow=False,
                 font=dict(family="Arial", size=12, color="black"),
             )
+
             fig.add_annotation(
                 x=0.5,
-                y=-0.15,
-                xref="paper",
-                yref="paper",
-                text=f"Total Watching Time: {video_watch_time}",
-                showarrow=False,
-                font=dict(family="Arial", size=12, color="black"),
-            )
-            fig.add_annotation(
-                x=0.5,
-                y=-0.15,
+                y=0.10,  # Moved to the bottom half
                 xref="paper",
                 yref="paper",
                 text=f"Login Frequency: {login_amt}",
                 showarrow=False,
                 font=dict(family="Arial", size=12, color="black"),
             )
+
             fig.add_annotation(
                 x=0.5,
-                y=-0.15,
+                y=0.15,  # Moved to the bottom half
                 xref="paper",
                 yref="paper",
                 text=f"Microblog Post Frequency: {mb_count}",
                 showarrow=False,
                 font=dict(family="Arial", size=12, color="black"),
             )
+
             fig.add_annotation(
                 x=0.5,
-                y=-0.15,
+                y=0.20,  # Moved to the bottom half
                 xref="paper",
                 yref="paper",
                 text=f"Average Discussion Post Length: {average_comment_length}",
                 showarrow=False,
                 font=dict(family="Arial", size=12, color="black"),
             )
+
             fig.add_annotation(
                 x=0.5,
-                y=-0.15,
+                y=0.25,  # Moved to the bottom half
                 xref="paper",
                 yref="paper",
                 text=f"Total Session Time: {total_time_login}",
                 showarrow=False,
                 font=dict(family="Arial", size=12, color="black"),
             )
+
 
             # Update layout
             fig.update_layout(title=f'Activity For User Id = {selected_user_id} in Timeframe {selected_timeframe}',
