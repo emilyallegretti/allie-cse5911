@@ -13,8 +13,6 @@ from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.express as px
 import plotly.graph_objs as go
-import pandas as pd
-
 
 from EventContainers.EmojiSelectSequence import EmojiSelectSequence
 from EventContainers.VideoWatchSequence import VideoWatchSequence
@@ -46,8 +44,8 @@ def create_event_objects(results):
         event = create_event_object(row)
         if event: 
             Event.add(event)
-        else:
-            print("Invalid event")
+        # else:
+        #     print("Invalid event")
 
 # create and add post objects (Announcements, Comments, Microblogs) from query results
 def create_post_objects(results, post_type):
@@ -111,7 +109,6 @@ def show_user_activities(user_activities, user_id):
     for date, group in grouped_activities:
         print(f"Date: {date}")
         print(tabulate(group[['user_id', 'time', 'activityType', 'page' ]], headers='keys', tablefmt='pretty'))
-        print("\n")  
     user_activities_df = user_activities_df.sort_values('timestamp')
 
 # print the total time spent per day for a given user
@@ -265,7 +262,9 @@ def main():
     db_name = "FromEchoDev240208a_echo_main_db_current.sqlite3"
     db = Database(os.path.join("db", db_name))
     db.connect()
-    user_id = 1
+    user_id = 75
+    microblog_id = 6
+    videoId = 'video1'
 
     try: 
         ### PARSING EVENT LOG DATA FROM ECHO DATABASE
@@ -305,7 +304,7 @@ def main():
         # create updated df of events with synthetic Page Exits
         page_exit_df = create_page_exits_dataframe(Event.events)
 
-        # =====examples for a user=====
+        # ********************** EXAMPLE OF A USER ****************************
 
         # show a user's login events
         user_logins_df = filter_login_events(events_df, user_id)
@@ -319,7 +318,7 @@ def main():
         print_login_count_per_day(user_activities, user_id)
 
         # show all comments for a given microblog
-        specific_microblog_id = 6
+        specific_microblog_id = microblog_id
         show_comments_for_microblog(specific_microblog_id)
         # show all comments for a given author
         author_id = user_id
@@ -342,33 +341,10 @@ def main():
             show_emoji_activity_indicators(emoji_df, user_id)
             print()
 
-        # Get all comments for a specific microblog
-        specific_microblog_id = 6  # replace with the actual microblog_id you want to query
-        comments = Comment.get_comments_for_microblog(specific_microblog_id)
-
-        comments_df = pd.DataFrame(comments)
-
-        print(comments_df)
-        print("-" * 144)
-
-        # Get all comments for a specific author
-        author_id = 30
-        authors_comments = Comment.get_comments_by_author(author_id)
-
-        # Convert the list of comments to a DataFrame for better tabular representation
-        authors_df = pd.DataFrame(authors_comments)
-
-        # Display the DataFrame
-        print(authors_df)
-
-        # show an example of a user's emoji select sequence by plotting score(intensity, emotion) vs time
-        userId = 75
-        emojiDf = EmojiSelectSequence(userId).emojiEventsDf
-        # convert to datetime format
-        if not emojiDf.empty:
-            emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp'])
-        # plot score vs time
-        print("\n******** Examples of Emoji Select Events *********")
+        # show a user's video watch events for a given video
+        video_df = create_video_dataframe_for_user(user_id, videoId)
+        # plot
+        plot_video_watch_sequence(video_df, user_id, videoId)
 
         # ********************** PLOTTING WITH PLOTLY *******************************
 
