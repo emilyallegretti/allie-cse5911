@@ -67,8 +67,8 @@ The following objectives have yet to be implemented:
 - (Objective 4)
 *Personalized Reporting*: Use patterns detected in an individual student’s platform interaction data to send personalized reports/messages to them based on their activity/behaviors. Send these same reports to the student's instructor to keep the instructor updated on students’ progress, and determine possible suggested actions for Echo to take.
 
-Other points of improvement:
-= There are more states/indicators that can be shown in the final output graph. For example, time on announcement page, time spent reading slides, emoji scores, etc. can/should all be included in the graphical output.
+Other points of improvement:  
+- There are more states/indicators that can be shown in the final output graph. For example, time on announcement page, time spent reading slides, emoji scores, etc. can/should all be included in the graphical output.
 - There are several TODOs throughout the codebase that point out improvement suggestions for various components.
 
 See InfoForFutureDevelopers.txt for more details.
