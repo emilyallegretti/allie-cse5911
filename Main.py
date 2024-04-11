@@ -262,7 +262,7 @@ def countTotalSessionTime(login_df):
 
 
 def main():
-    db_name = "FROMECHOTEST2404040907a_echo_main_db_current.sqlite3"
+    db_name = "FromEchoDev240208a_echo_main_db_current.sqlite3"
     db = Database(os.path.join("db", db_name))
     db.connect()
     user_id = 1
@@ -298,7 +298,7 @@ def main():
         for row in activity_results:
             activity = UserActivity.create_user_activity(row)
             user_activities.append(activity)
-        
+
         # create a df for all users' activities based on videoactivities
         events_df = create_events_dataframe(Event.events, "events_df")
 
@@ -365,34 +365,10 @@ def main():
         userId = 75
         emojiDf = EmojiSelectSequence(userId).emojiEventsDf
         # convert to datetime format
-        emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp'])
+        if not emojiDf.empty:
+            emojiDf.loc[:, 'timestamp'] = pd.to_datetime(emojiDf['timestamp'])
         # plot score vs time
         print("\n******** Examples of Emoji Select Events *********")
-        # plt.figure(figsize=(8, 5))
-        # plt.plot(emojiDf['timestamp'], emojiDf['IntensityScore'], label='Intensity', marker='o', linestyle='solid')
-        # plt.plot(emojiDf['timestamp'], emojiDf['EmotionScore'], label='Emotion', marker='x', linestyle='dashed')
-        # plt.xlabel('Time')
-        # plt.ylabel('Score')
-        # plt.legend()
-        # plt.title('Emoji Changes Over Time for User ' + str(userId))
-        # plt.show()
-
-        # show an example of a user's video watching sequence by plotting pauses/plays vs time
-        userId = 74
-        videoId = 'video2'
-        videoDf = VideoWatchSequence(userId, videoId).videoEventsDf
-        # get only time out of timestamp
-        videoDf.loc[:, "timestamp"] = videoDf['timestamp'].apply(lambda x: x[11:])
-        # plot action vs time
-        videoDf["time_only"] = videoDf["timestamp"]
-        x = videoDf["time_only"]
-        y = videoDf["kind"]
-        # plt.scatter(x,y)
-        # plt.xlabel('Time')
-        # plt.ylabel('Action')
-        # plt.title('Video Actions for User ' + str(userId) + ' For ' + str(videoId) )
-        # plt.show()
-
 
         # Initialize the Dash app
         app = dash.Dash(__name__)
@@ -435,12 +411,10 @@ def main():
             print("states of being on microblog for user selected_user_id")
             on_mb_df = microblog_state_seq.states_df
 
-
             # On video page-- state sequence
             on_video_seq = OnVideoPageSequence(page_exit_df, selected_user_id)
             print("states of being on videos page for user selected_user_id")
             video_seq_df=on_video_seq.states_df
-    
 
             # Watching video -- state sequence
             # TODO: each video id is currently hardcoded in to get each dataframe. This should probably be paramaterized in the future
@@ -454,26 +428,34 @@ def main():
             logged_in_states = LoggedInSequence(page_exit_df, selected_user_id)
             print("states of being logged in for user selected_user_id")
             logged_in_df = logged_in_states.states_df
-    
+
             average_comment_length = None
             total_time_login = None
             login_amt=None
             # convert timestamp columns to datetime format
             if not watching1_df.empty:
-                watching1_df["startTime"] = pd.to_datetime(watching1_df["startTime"])
-                watching1_df['endTime'] = pd.to_datetime(watching1_df['endTime'])
+                watching1_df["startTime"] = pd.to_datetime(watching1_df["startTime"],format="mixed")
+                watching1_df["endTime"] = pd.to_datetime(
+                    watching1_df["endTime"], format="mixed"
+                )
             if not video_seq_df.empty:
-                video_seq_df["startTime"] = pd.to_datetime(video_seq_df["startTime"])
+                video_seq_df["startTime"] = pd.to_datetime(
+                    video_seq_df["startTime"], format="mixed"
+                )
                 video_seq_df["endTime"] = pd.to_datetime(
-                    video_seq_df["endTime"], format="%Y-%m-%d %H:%M:%S:%f"
+                    video_seq_df["endTime"], format="mixed"
                 )
             if not on_mb_df.empty:
-                on_mb_df["startTime"] = pd.to_datetime(on_mb_df["startTime"])
+                on_mb_df["startTime"] = pd.to_datetime(
+                    on_mb_df["startTime"], format="mixed"
+                )
                 on_mb_df["endTime"] = pd.to_datetime(
-                    on_mb_df["endTime"], format="%Y-%m-%d %H:%M:%S:%f"
+                    on_mb_df["endTime"], format="mixed"
                 )
             if not logged_in_df.empty:
-                logged_in_df["startTime"] = pd.to_datetime(logged_in_df["startTime"])
+                logged_in_df["startTime"] = pd.to_datetime(
+                    logged_in_df["startTime"], format="mixed"
+                )
                 logged_in_df["endTime"] = pd.to_datetime(
                     logged_in_df["endTime"], format="mixed"
                 )
@@ -517,14 +499,14 @@ def main():
                 # get appropriate analytics:
                 # todo: overall engagement and blogging engagement?
                 video_watch_frequency = len(watching_df_filtered)
-                #video_watch_time = watching_df_filtered.countTotalWatchTime()
+                # video_watch_time = watching_df_filtered.countTotalWatchTime()
                 mb_count = len(authors_df_filtered)
                 # # Calculate the length of each comment
                 # authors_df['comment_length'] = authors_df['comment'].apply(lambda x: len(x))
                 # # Calculate the average comment length
                 # average_comment_length = authors_df['comment_length'].mean()
                 login_amt = len(logged_in_df_filtered)
-                total_time_login = logged_in_df_filtered.countTotalSessionTime()
+               # total_time_login = logged_in_df_filtered.countTotalSessionTime()
 
             elif selected_timeframe == "last_login_session":
                 # Fetch data for the last login session
@@ -565,7 +547,7 @@ def main():
                     # get appropriate analytics:
                 # todo: overall engagement and blogging engagement?
                 video_watch_frequency = len(watching_df_filtered)
-                #video_watch_time = watching_df_filtered.countTotalWatchTime()
+                # video_watch_time = watching_df_filtered.countTotalWatchTime()
                 mb_count = len(authors_df_filtered)
                 # Calculate the length of each comment
                 print("authors_df")
@@ -576,7 +558,7 @@ def main():
                 # # Calculate the average comment length
                 # average_comment_length = authors_df["comment_length"].mean()
                 login_amt = len(logged_in_df_filtered)
-                total_time_login = logged_in_df_filtered.countTotalSessionTime()
+               # total_time_login = logged_in_df_filtered.countTotalSessionTime()
 
             else:
                 # Default to fetching all data from the start date
@@ -590,17 +572,17 @@ def main():
                 # get appropriate analytics:
                 # TODO: overall engagement and blogging engagement?
                 video_watch_frequency = len(watching_df_filtered)
-                #video_watch_time = watching_df_filtered.countTotalWatchTime()
+                # video_watch_time = watching_df_filtered.countTotalWatchTime()
                 mb_count = len(authors_df_filtered)
-               # if not authors_df.empty:
-                # Calculate the length of each comment
-                #     authors_df["comment_length"] = authors_df["comment"].apply(
-                #         lambda x: len(x)
-                #     )
-                #     # Calculate the average comment length
-                #     average_comment_length = authors_df["comment_length"].mean()
-                # login_amt = len(logged_in_df_filtered)
-              #  total_time_login = countTotalSessionTime(logged_in_df_filtered)
+            # if not authors_df.empty:
+            # Calculate the length of each comment
+            #     authors_df["comment_length"] = authors_df["comment"].apply(
+            #         lambda x: len(x)
+            #     )
+            #     # Calculate the average comment length
+            #     average_comment_length = authors_df["comment_length"].mean()
+            # login_amt = len(logged_in_df_filtered)
+            #  total_time_login = countTotalSessionTime(logged_in_df_filtered)
 
             fig = go.Figure()
 
@@ -640,7 +622,7 @@ def main():
                 # todo: overall engagement and blogging engagement?
             fig.add_annotation(
                 x=0.5,
-                y=0.05,  # Moved to the bottom half (0.05 is lower than 0.5)
+                y=0.1,  # Moved to the bottom third
                 xref="paper",
                 yref="paper",
                 text=f"Video Watch Frequency: {video_watch_frequency}",
@@ -650,7 +632,7 @@ def main():
 
             fig.add_annotation(
                 x=0.5,
-                y=0.10,  # Moved to the bottom half
+                y=0.2,  # Moved to the bottom third
                 xref="paper",
                 yref="paper",
                 text=f"Login Frequency: {login_amt}",
@@ -660,7 +642,7 @@ def main():
 
             fig.add_annotation(
                 x=0.5,
-                y=0.15,  # Moved to the bottom half
+                y=0.3,  # Moved to the bottom third
                 xref="paper",
                 yref="paper",
                 text=f"Microblog Post Frequency: {mb_count}",
@@ -670,7 +652,7 @@ def main():
 
             fig.add_annotation(
                 x=0.5,
-                y=0.20,  # Moved to the bottom half
+                y=0.4,  # Moved to the bottom third
                 xref="paper",
                 yref="paper",
                 text=f"Average Discussion Post Length: {average_comment_length}",
@@ -680,14 +662,13 @@ def main():
 
             fig.add_annotation(
                 x=0.5,
-                y=0.25,  # Moved to the bottom half
+                y=0.5,  # Moved to the bottom third
                 xref="paper",
                 yref="paper",
                 text=f"Total Session Time: {total_time_login}",
                 showarrow=False,
-                font=dict(family="Arial", size=12, color="black"),
+                font=dict(family="Arial", size=12, color="black")
             )
-
 
             # Update layout
             fig.update_layout(title=f'Activity For User Id = {selected_user_id} in Timeframe {selected_timeframe}',
@@ -700,9 +681,6 @@ def main():
         if __name__ == '__main__':
             app.run_server(debug=True)
 
-
-
-        
     finally:
         db.close()
 
