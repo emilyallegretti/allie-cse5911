@@ -417,29 +417,27 @@ def main():
             microblog_state_seq = OnMicroblogSequence(page_exit_df, selected_user_id)
             print("states of being on microblog for user selected_user_id")
             on_mb_df = microblog_state_seq.states_df
-            print(on_mb_df)
+
 
             # On video page-- state sequence
             on_video_seq = OnVideoPageSequence(page_exit_df, selected_user_id)
             print("states of being on videos page for user selected_user_id")
             video_seq_df=on_video_seq.states_df
-            print(video_seq_df)
+    
 
             # Watching video -- state sequence
             # TODO: each video id is currently hardcoded in to get each dataframe. This should probably be paramaterized in the future
             watching_video1_states = WatchingVideoStateSequence(selected_user_id, 'video1')
             print('states of watching video1 for user selected_user_id')
             watching1_df = watching_video1_states.states_df
-            print(watching_video1_states.states_df)
             watching_video2_states = WatchingVideoStateSequence(
                 selected_user_id, "video2"
             )
-            print("states of watching video2 for user selected_user_id")
             # Logged In -- state sequnece
             logged_in_states = LoggedInSequence(page_exit_df, selected_user_id)
             print("states of being logged in for user selected_user_id")
             logged_in_df = logged_in_states.states_df
-            print(logged_in_df)
+    
 
             # convert timestamp columns to datetime format
             if not watching1_df.empty:
@@ -551,6 +549,8 @@ def main():
                 #video_watch_time = watching_df_filtered.countTotalWatchTime()
                 mb_count = len(authors_df_filtered)
                 # Calculate the length of each comment
+                print("authors_df")
+                print(authors_df)
                 authors_df["comment_length"] = authors_df["comment"].apply(
                     lambda x: len(x)
                 )

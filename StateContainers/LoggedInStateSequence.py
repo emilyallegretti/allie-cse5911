@@ -41,7 +41,6 @@ class LoggedInSequence():
         # as a dict object
         starttime = None
         for row in events_df.values:
-            print(row)
             # index 1 corresponds to 'kind' attribute, 3 to 'page', 2 to 'timestamp'
             if row[1] == "Login":
                 starttime = row[2]

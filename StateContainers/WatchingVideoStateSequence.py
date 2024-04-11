@@ -57,7 +57,6 @@ class WatchingVideoStateSequence:
                 endtime = row[2]
                 states.append((WatchingVideo(row[0], self.video_id, starttime, endtime, 'WatchingVideo')).__dict__)
                 starttime = None
-                print(states)
         return states
 
 
