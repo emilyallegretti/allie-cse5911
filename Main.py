@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from matplotlib.dates import DateFormatter
 import matplotlib.pyplot as plt
-import seaborn as sns
 from tabulate import tabulate
 import os
 
@@ -20,7 +19,7 @@ from Events.Event import Event
 from Posts.Announcement import Announcement
 from Posts.Comment import Comment
 from Posts.Microblog import Microblog
-from EventContainers.EmojiSelectSequence import EmojiSelectSequence
+from EventContainers.EmojiSelectSequence import EmojiSelectSequence, EmojiIndicators
 from EventContainers.VideoWatchSequence import VideoWatchSequence
 from EventContainers.UserActivity import UserActivity, calculate_time_spent_per_day, count_login_page_activities_per_day
 from States.State import State
@@ -29,7 +28,6 @@ from StateContainers.OnMicroblogStateSequence import OnMicroblogSequence
 from StateContainers.OnVideoPageStateSequence import OnVideoPageSequence
 from StateContainers.WatchingVideoStateSequence import WatchingVideoStateSequence
 from EventContainers.MicroblogVisitsSequence import MicroblogVisitsSequence
-from EmojiIndicators import EmojiIndicators
 
 # execute a given query and return the results
 def query_database(db, query):
