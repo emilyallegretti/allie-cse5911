@@ -136,12 +136,12 @@ def print_login_count_per_day(user_activities, user_id):
 def show_comments_for_microblog(microblog_id):
     # create a dataframe for all comments of a given microblog
     microblog_comments = Comment.get_comments_for_microblog(microblog_id)
-    comments_df = create_events_dataframe(microblog_comments, "comments_for_microblog " + str(microblog_id))
+    comments_df = create_events_dataframe(microblog_comments, "comments_for_microblog_" + str(microblog_id))
 
 # show comments made by a given author
 def show_comments_for_author(author_id):
     authors_comments = Comment.get_comments_by_author(author_id)
-    authors_df = create_events_dataframe(authors_comments, "comments for author " + str(author_id))
+    authors_df = create_events_dataframe(authors_comments, "comments_for_author_" + str(author_id))
 
 # print comment count for a given author
 def print_comment_count_for_author(author_id):
@@ -334,7 +334,7 @@ def main():
             print(f"No emoji select events for user {user_id}")
         else:
             # plot
-            plot_emoji_select_sequence(emoji_df, user_id)
+            # plot_emoji_select_sequence(emoji_df, user_id) # uncomment this line if you want to see the plot
             # show a user's emoji activity indicators
             show_emoji_activity_indicators(emoji_df, user_id)
             print()
@@ -342,14 +342,13 @@ def main():
         # show a user's video watch events for a given video
         video_df = create_video_dataframe_for_user(user_id, videoId)
         # plot
-        plot_video_watch_sequence(video_df, user_id, videoId)
+        # plot_video_watch_sequence(video_df, user_id, videoId) # uncomment this line if you want to see the plot
 
         # ********************** PLOTTING WITH PLOTLY *******************************
 
         # Initialize the Dash app
         app = dash.Dash(__name__)
 
-        # Define the layout of the Dash app
         # Define the layout of the Dash app
         app.layout = html.Div([
             dcc.Dropdown(
@@ -368,14 +367,16 @@ def main():
                 value='from_start',  # Default value is 'From Start Date'
                 clearable=False
             ),
-            dcc.Graph(id='combined-plot')
+            dcc.Graph(id='combined-plot'),
+            html.Div(id='info-section', style={'display': 'flex', 'justifyContent': 'center'})
         ])
         print("authors_df")
         print(authors_df)
 
         # Define callback to update the plot based on selected user ID and time frame
         @app.callback(
-            Output('combined-plot', 'figure'),
+            [Output('combined-plot', 'figure'),
+            Output('info-section', 'children')],
             [Input('user-dropdown', 'value'),
             Input('timeframe-dropdown', 'value')]
         )
@@ -387,7 +388,7 @@ def main():
             print("states of being on microblog for user selected_user_id")
             on_mb_df = microblog_state_seq.states_df
 
-            # On video page-- state sequence
+            # On video page -- state sequence
             on_video_seq = OnVideoPageSequence(page_exit_df, selected_user_id)
             print("states of being on videos page for user selected_user_id")
             video_seq_df=on_video_seq.states_df
@@ -397,14 +398,14 @@ def main():
             watching_video1_states = WatchingVideoStateSequence(selected_user_id, 'video1')
             print('states of watching video1 for user selected_user_id')
             watching1_df = watching_video1_states.states_df
-            # Logged In -- state sequnece
+            # Logged In -- state sequenece
             logged_in_states = LoggedInSequence(page_exit_df, selected_user_id)
             print("states of being logged in for user selected_user_id")
             logged_in_df = logged_in_states.states_df
 
             average_comment_length = None
             total_time_login = None
-            login_amt=None
+            login_amt = None
             # convert timestamp columns to datetime format
             if not watching1_df.empty:
                 watching1_df["startTime"] = pd.to_datetime(watching1_df["startTime"],format="mixed")
@@ -592,35 +593,6 @@ def main():
                 # add annotations for analytics
                 # todo: overall engagement and blogging engagement?
 
-            fig.add_annotation(
-                x=0.1,
-                y=0.1,  # Moved to the bottom third
-                xref="paper",
-                yref="paper",
-                text=f"Video Watch Frequency: {video_watch_frequency}",
-                showarrow=False,
-                font=dict(family="Arial", size=12, color="black"),
-            )
-
-            fig.add_annotation(
-                x=0.1,
-                y=0.15,  # Moved to the bottom third
-                xref="paper",
-                yref="paper",
-                text=f"Login Frequency: {login_amt}",
-                showarrow=False,
-                font=dict(family="Arial", size=12, color="black"),
-            )
-
-            fig.add_annotation(
-                x=0.1,
-                y=0.2,  # Moved to the bottom third
-                xref="paper",
-                yref="paper",
-                text=f"Microblog Post Frequency: {mb_count}",
-                showarrow=False,
-                font=dict(family="Arial", size=12, color="black"),
-            )
             # TODO: uncomment when avg discussion post length is working
             # fig.add_annotation(
             #     x=0.1,
@@ -632,26 +604,28 @@ def main():
             #     font=dict(family="Arial", size=12, color="black"),
             # )
 
-            fig.add_annotation(
-                x=0.1,
-                y=0.3,  # Moved to the bottom third
-                xref="paper",
-                yref="paper",
-                text=f"Total Session Time: {total_time_login}",
-                showarrow=False,
-                font=dict(family="Arial", size=12, color="black")
-            )
-
+            # Organize information in two columns
+            info_section = html.Div([
+                html.Div([
+                    html.P(f"Video Watch Frequency: {video_watch_frequency}"),
+                    html.P(f"Login Frequency: {login_amt}"),
+                ], style={'display': 'inline-block', 'verticalAlign': 'top', 'padding': '0 10px'}),
+                html.Div([
+                    html.P(f"Microblog Post Frequency: {mb_count}"),
+                    html.P(f"Total Session Time: {total_time_login}"),
+                ], style={'display': 'inline-block', 'verticalAlign': 'top', 'padding': '0 10px'})
+            ], style={'display': 'flex', 'justifyContent': 'center'})
+            
             # Update layout
             fig.update_layout(title=f'Activity For User Id = {selected_user_id} in Timeframe {selected_timeframe}',
                             xaxis_title='Time',
                             yaxis_title='State')
 
-            return fig
+            return fig, info_section
 
         # Run the Dash app
         if __name__ == '__main__':
-            app.run_server(debug=True)
+            app.run_server()
 
     finally:
         db.close()
