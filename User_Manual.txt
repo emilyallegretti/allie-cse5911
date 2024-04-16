@@ -14,10 +14,12 @@ pandas
 numpy
 matplotlib
 tabulate
+dash
+plotly
 You can install these libraries using pip, Python's package installer. Run the following command in your terminal or command prompt:
 
 
-pip install pandas numpy matplotlib tabulate
+python3 -m pip install pandas numpy matplotlib tabulate dash plotly
 
 
 Accessing the Database
