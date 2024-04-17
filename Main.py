@@ -21,7 +21,7 @@ from Posts.Comment import Comment
 from Posts.Microblog import Microblog
 from EventContainers.EmojiSelectSequence import EmojiSelectSequence, EmojiIndicators
 from EventContainers.VideoWatchSequence import VideoWatchSequence
-from EventContainers.UserActivity import UserActivity, calculate_time_spent_per_day, count_login_page_activities_per_day
+from EventContainers.UserActivity import UserActivity, calculate_time_spent_on_readings_per_day, calculate_time_spent_per_day, count_login_page_activities_per_day, count_readings_page_visits_for_user
 from States.State import State
 from StateContainers.LoggedInStateSequence import LoggedInSequence
 from StateContainers.OnMicroblogStateSequence import OnMicroblogSequence
@@ -131,6 +131,24 @@ def print_login_count_per_day(user_activities, user_id):
         print(tabulate(login_count_per_user_day, headers='keys', tablefmt='pretty'))
     else:
         print(f"No 'Login Page' activities found for user {user_id}.")
+
+# print Readings visit count per day for a given user
+def print_readings_visit_count_per_day_for_user(user_activities, user_id):
+    readings_visit_count = count_readings_page_visits_for_user(user_activities, user_id)
+    if not readings_visit_count.empty:
+        print(f"Readings visit count per day for user {user_id}:")
+        print(tabulate(readings_visit_count, headers='keys', tablefmt='pretty'))
+    else:
+        print(f"No Readings page visits found for user {user_id}.")
+
+# print time spent by student on Readings per day for a given user
+def print_time_spent_on_readings_per_day(user_activities, user_id):
+    time_spent_on_readings = calculate_time_spent_on_readings_per_day(user_activities, user_id)
+    if not time_spent_on_readings.empty:
+        print(f"Time spent on 'Readings' page per day for user {user_id}:")
+        print(tabulate(time_spent_on_readings, headers='keys', tablefmt='pretty'))
+    else:
+        print(f"No 'Readings' page activities found for user {user_id}.")                
 
 # show all comments for a given microblog
 def show_comments_for_microblog(microblog_id):
@@ -314,6 +332,8 @@ def main():
         # analyze a user's all activities by day
         print_time_spent_per_day(user_activities, user_id)
         print_login_count_per_day(user_activities, user_id)
+        print_readings_visit_count_per_day_for_user(user_activities, user_id)
+        print_time_spent_on_readings_per_day(user_activities, user_id)
 
         # show all comments for a given microblog
         specific_microblog_id = microblog_id
