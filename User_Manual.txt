@@ -46,4 +46,5 @@ Once the application is running:
 Console Outputs: The application prints results directly to the console, including data frames and analysis summaries.
 
 
-Graphs and Visualizations: Graphs will be displayed in separate windows if the script includes plotting commands. Ensure your graphical interface is configured to display these windows.
+Graphs and Visualizations: The Plotly output can be viewed by entering the following URL into your web browser after running the program:
+http://127.0.0.1:8050/ 
